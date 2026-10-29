@@ -1,58 +1,39 @@
-# ============================================================
-# handlers/start.py — /start command + Main Menu Callbacks
-# ============================================================
-
 from __future__ import annotations
 
-import asyncio
 import io
 import logging
-from datetime import datetime, timezone
 from typing import Optional
 
 from telegram import Update, InputFile
 from telegram.constants import ParseMode
-from telegram.ext import (
-    Application,
-    CallbackQueryHandler,
-    CommandHandler,
-    ContextTypes,
-)
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes
 
 import config
 import database.db as db
-from keyboards.menus import (
-    main_menu,
-    premium_menu,
-    scrape_menu,
-    add_menu,
-    session_menu,
-    status_menu,
-)
+from keyboards.menus import main_menu, premium_menu, scrape_menu, add_menu, session_menu, status_menu
 from utils.banner import generate_banner
-from utils.text import sc, escape_html, build_progress_bar, seconds_to_human
+from utils.text import sc, escape_html
 from handlers import states
 
 logger = logging.getLogger(__name__)
 
-
-# ── Helpers ───────────────────────────────────────────────────
-
 def _build_welcome(user_id: int, user_name: str) -> str:
+    # ADVANCED HACKER DASHBOARD TEXT
     return (
-        f"<b>⧩ {sc('Velyn Nox Premium')} ⧩</b>\n"
-        f"<b>{sc('The Ultimate Telegram Scraper & Adder')}</b>\n\n"
-        f"🔥 <b>{sc('Welcome to the Elite Network')}, "
+        f"<b>⧩ {sc('ᴠᴇʟʏɴ ɴᴏx ᴘʀᴇᴍɪᴜᴍ')} ⧩</b>\n"
+        f"<i>{sc('ᴛʜᴇ ᴜʟᴛɪᴍᴀᴛᴇ ᴛᴇʟᴇɢʀᴀᴍ ꜱᴄʀᴀᴘᴇʀ & ᴀᴅᴅᴇʀ')}</i>\n\n"
+        f"🔥 <b>{sc('ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ᴛʜᴇ ᴇʟɪᴛᴇ ɴᴇᴛᴡᴏʀᴋ')}, "
         f"<a href='tg://user?id={user_id}'>{escape_html(user_name)}</a>!</b>\n\n"
-        f"<blockquote>"
-        f"<b>{sc('How to Use')}</b>\n"
-        f"▸ <b>{sc('Scrape')}</b> : {sc('Extracts members from a group')}\n"
-        f"▸ <b>{sc('Add')}</b> : {sc('Injects members into your group')}\n"
-        f"▸ <b>{sc('Premium')}</b> : {sc('Unlocks unlimited use')}"
-        f"</blockquote>\n"
-        f"<b>{sc('Select an option below to begin.')}</b>"
+        f"<blockquote><b>{sc('ꜱʏꜱᴛᴇᴍ ꜱᴛᴀᴛᴜꜱ')}</b>\n"
+        f"├ ☠ <b>{sc('ᴜꜱᴇʀ ꜱᴛᴀᴛᴜꜱ')}</b> : <code>{sc('ᴀᴄᴛɪᴠᴇ')}</code>\n"
+        f"├ ⚡ <b>{sc('ɴᴇᴛᴡᴏʀᴋ')}</b> : <code>{sc('ᴇɴᴄʀʏᴘᴛᴇᴅ')}</code>\n"
+        f"└ 🛡 <b>{sc('ᴘʀᴏᴛᴏᴄᴏʟ')}</b> : <code>{sc('ʙʏᴘᴀꜱꜱ ᴀᴄᴛɪᴠᴇ')}</code></blockquote>\n\n"
+        f"<blockquote><b>{sc('ᴀᴠᴀɪʟᴀʙʟᴇ ᴛᴏᴏʟꜱ')}</b>\n"
+        f"▸ <b>{sc('ꜱᴄʀᴀᴘᴇ')}</b> : {sc('ᴇxᴛʀᴀᴄᴛꜱ ᴍᴇᴍʙᴇʀꜱ ꜰʀᴏᴍ ᴀ ɢʀᴏᴜᴘ')}\n"
+        f"▸ <b>{sc('ᴀᴅᴅ')}</b> : {sc('ɪɴᴊᴇᴄᴛꜱ ᴍᴇᴍʙᴇʀꜱ ɪɴᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ')}\n"
+        f"▸ <b>{sc('ᴘʀᴇᴍɪᴜᴍ')}</b> : {sc('ᴜɴʟᴏᴄᴋꜱ ᴜɴʟɪᴍɪᴛᴇᴅ ᴜꜱᴇ')}</blockquote>\n\n"
+        f"<b>{sc('ꜱᴇʟᴇᴄᴛ ᴀɴ ᴏᴘᴛɪᴏɴ ʙᴇʟᴏᴡ ᴛᴏ ʙᴇɢɪɴ.')} 👇</b>"
     )
-
 
 def _build_status_text(ctx: dict) -> str:
     user       = ctx["user"]
@@ -109,14 +90,9 @@ def _build_status_text(ctx: dict) -> str:
     return "\n".join(lines)
 
 
-async def _fetch_user_dp(
-    context: ContextTypes.DEFAULT_TYPE,
-    user_id: int,
-) -> Optional[bytes]:
+async def _fetch_user_dp(context: ContextTypes.DEFAULT_TYPE, user_id: int) -> Optional[bytes]:
     try:
-        photos = await context.bot.get_user_profile_photos(
-            user_id=user_id, limit=1
-        )
+        photos = await context.bot.get_user_profile_photos(user_id=user_id, limit=1)
         if photos.total_count == 0:
             return None
         file_id = photos.photos[0][-1].file_id
@@ -129,12 +105,7 @@ async def _fetch_user_dp(
         return None
 
 
-# ── /start handler ────────────────────────────────────────────
-
-async def cmd_start(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-) -> None:
+async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user     = update.effective_user
     chat     = update.effective_chat
     user_id  = user.id
@@ -153,7 +124,6 @@ async def cmd_start(
 
     welcome_text = _build_welcome(user_id, name)
 
-    # FIX: Image and text merged into one message (caption)
     if banner_path:
         try:
             with open(banner_path, "rb") as f:
@@ -174,38 +144,19 @@ async def cmd_start(
     logger.info(f"[START] user={user_id} ({name}) started the bot.")
 
 
-# ── /myplan handler ───────────────────────────────────────────
-
-async def cmd_myplan(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-) -> None:
+async def cmd_myplan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     ctx     = db.get_full_user_context(user_id)
     text    = _build_status_text(ctx)
 
-    await update.message.reply_html(
-        text,
-        reply_markup=status_menu(),
-        disable_web_page_preview=True,
-    )
+    await update.message.reply_html(text, reply_markup=status_menu(), disable_web_page_preview=True)
 
 
-# ── /status handler ───────────────────────────────────────────
-
-async def cmd_status(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-) -> None:
+async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await cmd_myplan(update, context)
 
 
-# ── Callback Query handlers ───────────────────────────────────
-
-async def cb_menu_back(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-) -> None:
+async def cb_menu_back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query   = update.callback_query
     user_id = query.from_user.id
     name    = query.from_user.full_name
@@ -214,30 +165,16 @@ async def cb_menu_back(
     states.clear_all(user_id)
 
     welcome_text = _build_welcome(user_id, name)
-    
     try:
-        await query.message.edit_caption(
-            caption=welcome_text,
-            parse_mode=ParseMode.HTML,
-            reply_markup=main_menu(),
-        )
+        await query.message.edit_caption(caption=welcome_text, parse_mode=ParseMode.HTML, reply_markup=main_menu())
     except Exception:
-        await query.message.edit_text(
-            welcome_text,
-            parse_mode=ParseMode.HTML,
-            reply_markup=main_menu(),
-            disable_web_page_preview=True,
-        )
+        await query.message.edit_text(welcome_text, parse_mode=ParseMode.HTML, reply_markup=main_menu(), disable_web_page_preview=True)
 
 
-async def cb_menu_scrape(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-) -> None:
+async def cb_menu_scrape(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query   = update.callback_query
     user_id = query.from_user.id
     await query.answer()
-
     has_sess = db.has_session(user_id)
 
     if not has_sess:
@@ -247,11 +184,7 @@ async def cb_menu_scrape(
             f"{sc('before you can scrape members.')}\n\n"
             f"<b>{sc('Setup your session now:')}</b>"
         )
-        await query.edit_message_text(
-            text,
-            parse_mode=ParseMode.HTML,
-            reply_markup=session_menu(has_session=False),
-        )
+        await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=session_menu(has_session=False))
         return
 
     text = (
@@ -261,21 +194,13 @@ async def cb_menu_scrape(
         f"▸ <b>{sc('Premium')}</b>: {sc('unlimited')}\n\n"
         f"<b>{sc('Tap Start Scrape and send the group link.')}</b>"
     )
-    await query.edit_message_text(
-        text,
-        parse_mode=ParseMode.HTML,
-        reply_markup=scrape_menu(),
-    )
+    await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=scrape_menu())
 
 
-async def cb_menu_add(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-) -> None:
+async def cb_menu_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query   = update.callback_query
     user_id = query.from_user.id
     await query.answer()
-
     has_sess = db.has_session(user_id)
 
     if not has_sess:
@@ -284,11 +209,7 @@ async def cb_menu_add(
             f"{sc('You need a connected session to add members.')}\n\n"
             f"<b>{sc('Setup your session now:')}</b>"
         )
-        await query.edit_message_text(
-            text,
-            parse_mode=ParseMode.HTML,
-            reply_markup=session_menu(has_session=False),
-        )
+        await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=session_menu(has_session=False))
         return
 
     text = (
@@ -299,17 +220,10 @@ async def cb_menu_add(
         f"▸ <b>{sc('Delay')}</b>: {config.ADD_DELAY_SECONDS}s {sc('per member')}\n\n"
         f"<b>{sc('Tap Start Adding to proceed.')}</b>"
     )
-    await query.edit_message_text(
-        text,
-        parse_mode=ParseMode.HTML,
-        reply_markup=add_menu(),
-    )
+    await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=add_menu())
 
 
-async def cb_menu_premium(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-) -> None:
+async def cb_menu_premium(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query   = update.callback_query
     user_id = query.from_user.id
     is_prem = db.is_premium(user_id)
@@ -337,18 +251,10 @@ async def cb_menu_premium(
             f"<a href='tg://user?id={config.OWNER_ID}'>{sc('Owner')}</a>"
         )
 
-    await query.edit_message_text(
-        text,
-        parse_mode=ParseMode.HTML,
-        reply_markup=premium_menu(is_owner=is_owner),
-        disable_web_page_preview=True,
-    )
+    await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=premium_menu(is_owner=is_owner), disable_web_page_preview=True)
 
 
-async def cb_premium_myplan(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-) -> None:
+async def cb_premium_myplan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query   = update.callback_query
     user_id = query.from_user.id
     await query.answer()
@@ -356,18 +262,10 @@ async def cb_premium_myplan(
     ctx  = db.get_full_user_context(user_id)
     text = _build_status_text(ctx)
 
-    await query.edit_message_text(
-        text,
-        parse_mode=ParseMode.HTML,
-        reply_markup=status_menu(),
-        disable_web_page_preview=True,
-    )
+    await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=status_menu(), disable_web_page_preview=True)
 
 
-async def cb_status_refresh(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-) -> None:
+async def cb_status_refresh(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query   = update.callback_query
     user_id = query.from_user.id
     await query.answer(sc("refreshed"), show_alert=False)
@@ -375,17 +273,10 @@ async def cb_status_refresh(
     ctx  = db.get_full_user_context(user_id)
     text = _build_status_text(ctx)
 
-    await query.edit_message_text(
-        text,
-        parse_mode=ParseMode.HTML,
-        reply_markup=status_menu(),
-    )
+    await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=status_menu())
 
 
-async def cb_op_cancel(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-) -> None:
+async def cb_op_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query   = update.callback_query
     user_id = query.from_user.id
     await query.answer(sc("cancelling..."), show_alert=False)
@@ -396,8 +287,6 @@ async def cb_op_cancel(
         parse_mode=ParseMode.HTML,
     )
 
-
-# ── Handler Registration ──────────────────────────────────────
 
 def register(app: Application) -> None:
     app.add_handler(CommandHandler("start",  cmd_start))
