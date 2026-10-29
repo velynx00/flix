@@ -3,7 +3,7 @@ from telegram.constants import ParseMode
 from telegram.ext import Application, CallbackQueryHandler, ContextTypes
 from keyboards.menus import help_menu, back_btn
 from utils.text import sc
-from handlers.start import safe_edit_media
+from handlers.start import safe_edit_media, safe_edit
 
 async def cb_help_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
@@ -13,7 +13,7 @@ async def cb_help_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"{sc('ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ᴛʜᴇ ʜᴇʟᴘ ᴍᴇɴᴜ. ᴄʜᴏᴏꜱᴇ ᴀ ɢᴜɪᴅᴇ ʙᴇʟᴏᴡ ᴛᴏ ʟᴇᴀʀɴ.')}\n\n"
         f"<b>⧩ {sc('ᴀᴠᴀɪʟᴀʙʟᴇ ɢᴜɪᴅᴇꜱ')} ⧩</b>"
     )
-    await safe_edit_media(q, text, "HELP CENTER", help_menu())
+    await safe_edit_media(q, text, "HELP CENTER", help_menu(), use_static=True)
 
 async def cb_help_api(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
@@ -29,7 +29,7 @@ async def cb_help_api(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
         f"⚠️ <i>{sc('ᴋᴇᴇᴘ ᴛʜᴇꜱᴇ ᴄᴏᴅᴇꜱ ꜱᴀꜰᴇ.')}</i>"
     )
-    await safe_edit_media(q, text, "API GENERATION", back_btn())
+    await safe_edit(q, text, back_btn())
 
 async def cb_help_scrape(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
@@ -43,7 +43,7 @@ async def cb_help_scrape(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
         f"<i>{sc('ɴᴏᴛᴇ: ɪꜰ ɴᴏ ᴀᴘɪ ɪꜱ ᴀᴅᴅᴇᴅ, ᴀꜱᴋ ᴏᴡɴᴇʀ.')}</i>"
     )
-    await safe_edit_media(q, text, "SCRAPER ENGINE", back_btn())
+    await safe_edit(q, text, back_btn())
 
 async def cb_help_add(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
@@ -58,7 +58,7 @@ async def cb_help_add(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
         f"⚠️ <i>{sc('ʙᴏᴛ ᴀᴅᴅꜱ ᴍᴇᴍʙᴇʀꜱ ᴡɪᴛʜ ᴀ 10ꜱᴇᴄ ᴅᴇʟᴀʏ.')}</i>"
     )
-    await safe_edit_media(q, text, "ADDER ENGINE", back_btn())
+    await safe_edit(q, text, back_btn())
 
 def register(app: Application) -> None:
     app.add_handler(CallbackQueryHandler(cb_help_menu, pattern="^menu:help$"))

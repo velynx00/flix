@@ -14,7 +14,7 @@ async def cb_menu_scrape(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         f"<b>{sc('ʟɪᴍɪᴛ')}:</b> 50 {sc('ᴍᴇᴍʙᴇʀꜱ ᴘᴇʀ ꜱᴇꜱꜱɪᴏɴ (ꜰʀᴇᴇ).')}\n"
         f"<b>{sc('ᴘʀᴇꜱꜱ ꜱᴛᴀʀᴛ ꜱᴄʀᴀᴘᴇ ᴛᴏ ʙᴇɢɪɴ.')}</b>"
     )
-    await safe_edit_media(q, text, "SCRAPER ENGINE", scrape_menu())
+    await safe_edit_media(q, text, "SCRAPER ENGINE", scrape_menu(), use_static=True)
 
 async def cb_menu_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     q = update.callback_query
@@ -25,7 +25,7 @@ async def cb_menu_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         f"<b>{sc('ʟɪᴍɪᴛ')}:</b> 50 {sc('ᴍᴇᴍʙᴇʀꜱ ᴘᴇʀ ꜱᴇꜱꜱɪᴏɴ (ꜰʀᴇᴇ).')}\n"
         f"<b>{sc('ᴘʀᴇꜱꜱ ꜱᴛᴀʀᴛ ᴀᴅᴅɪɴɢ ᴛᴏ ʙᴇɢɪɴ.')}</b>"
     )
-    await safe_edit_media(q, text, "ADDER ENGINE", add_menu())
+    await safe_edit_media(q, text, "ADDER ENGINE", add_menu(), use_static=True)
 
 async def cb_scrape_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     q = update.callback_query

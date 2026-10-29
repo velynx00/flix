@@ -5,36 +5,36 @@ from telegram.constants import ParseMode
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes
 import config
 import database.db as db
-from keyboards.menus import main_menu, premium_menu, scrape_menu, add_menu, back_btn
-from utils.banner import generate_banner
+from keyboards.menus import main_menu, premium_menu, back_btn
+from utils.banner import generate_banner, generate_static_banner
 from utils.text import sc, escape_html
 from handlers import states
 
 logger = logging.getLogger(__name__)
 
-async def safe_edit_media(q, text, title, reply_markup=None):
-    dp_bytes = None
-    try:
-        photos = await q.get_bot().get_user_profile_photos(q.from_user.id, limit=1)
-        if photos.total_count:
-            f = await q.get_bot().get_file(photos.photos[0][-1].file_id)
-            buf = io.BytesIO()
-            await f.download_to_memory(buf)
-            dp_bytes = buf.getvalue()
-    except: pass
-    
-    banner = generate_banner(dp_bytes, title=title)
+async def safe_edit_media(q, text, title, reply_markup=None, use_static=False):
+    if use_static:
+        banner = generate_static_banner(title)
+    else:
+        dp_bytes = None
+        try:
+            photos = await q.get_bot().get_user_profile_photos(q.from_user.id, limit=1)
+            if photos.total_count:
+                f = await q.get_bot().get_file(photos.photos[0][-1].file_id)
+                buf = io.BytesIO()
+                await f.download_to_memory(buf)
+                dp_bytes = buf.getvalue()
+        except: pass
+        banner = generate_banner(dp_bytes, title)
+        
     media = InputMediaPhoto(media=InputFile(banner, filename="menu_banner.png"), caption=text, parse_mode=ParseMode.HTML)
-    
     try:
         await q.edit_message_media(media=media, reply_markup=reply_markup)
     except Exception as e:
         logger.warning(f"Media edit error: {e}")
-        try:
-            await q.edit_message_caption(caption=text, parse_mode=ParseMode.HTML, reply_markup=reply_markup)
+        try: await q.edit_message_caption(caption=text, parse_mode=ParseMode.HTML, reply_markup=reply_markup)
         except: pass
 
-# NAYA FUNCTION: Text edit ke liye (Admin panel ise use karta hai)
 async def safe_edit(query, text, reply_markup=None):
     try:
         if query.message.photo:
@@ -42,8 +42,7 @@ async def safe_edit(query, text, reply_markup=None):
         else:
             await query.edit_message_text(text=text, parse_mode=ParseMode.HTML, reply_markup=reply_markup)
     except Exception as e:
-        if "Message is not modified" not in str(e):
-            logger.warning(f"Edit error: {e}")
+        if "Message is not modified" not in str(e): logger.warning(f"Edit error: {e}")
 
 def _build_welcome(user_id: int, user_name: str) -> str:
     return (
@@ -64,8 +63,7 @@ async def _fetch_user_dp(context: ContextTypes.DEFAULT_TYPE, user_id: int) -> Op
     try:
         photos = await context.bot.get_user_profile_photos(user_id=user_id, limit=1)
         if photos.total_count == 0: return None
-        file_id = photos.photos[0][-1].file_id
-        tg_file = await context.bot.get_file(file_id)
+        tg_file = await context.bot.get_file(photos.photos[0][-1].file_id)
         buf = io.BytesIO()
         await tg_file.download_to_memory(buf)
         return buf.getvalue()
@@ -84,10 +82,8 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await context.bot.send_photo(
             chat_id=update.effective_chat.id,
             photo=InputFile(banner, filename="velyn_nox.png"),
-            has_spoiler=True,
-            caption=welcome_text,
-            parse_mode=ParseMode.HTML,
-            reply_markup=main_menu(),
+            has_spoiler=True, caption=welcome_text,
+            parse_mode=ParseMode.HTML, reply_markup=main_menu(),
         )
     except Exception as e:
         logger.error(f"Banner error: {e}")
@@ -100,13 +96,12 @@ async def cb_menu_back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     q = update.callback_query
     await q.answer()
     states.clear_all(q.from_user.id)
-    await safe_edit_media(q, _build_welcome(q.from_user.id, q.from_user.full_name), "SYSTEM OVERRIDE", main_menu())
+    await safe_edit_media(q, _build_welcome(q.from_user.id, q.from_user.full_name), "SYSTEM OVERRIDE", main_menu(), use_static=False)
 
 async def cb_menu_premium(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     q = update.callback_query
     await q.answer()
     is_owner = (q.from_user.id == config.OWNER_ID)
-    
     text = (
         f"<b>💎 {sc('ɴᴏx ꜱʏɴᴅɪᴄᴀᴛᴇ ᴘʀᴇᴍɪᴜᴍ')} 💎</b>\n"
         f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
@@ -119,7 +114,7 @@ async def cb_menu_premium(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
         f"🛒 <b>{sc('ᴛᴏ ᴘᴜʀᴄʜᴀꜱᴇ, ᴄᴏɴᴛᴀᴄᴛ')}:</b> <a href='https://t.me/Velynx007'><b>@Velynx007</b></a>"
     )
-    await safe_edit_media(q, text, "PREMIUM ACCESS", premium_menu(is_owner))
+    await safe_edit_media(q, text, "PREMIUM ACCESS", premium_menu(is_owner), use_static=True)
 
 def register(app: Application) -> None:
     app.add_handler(CommandHandler("start", cmd_start))
