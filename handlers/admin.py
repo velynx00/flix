@@ -26,7 +26,7 @@ async def cb_admin_addapi(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     text = f"<b>{sc('ᴀᴅᴅ ꜱᴇꜱꜱɪᴏɴ')}</b>\n\n<b>{sc('ꜱᴛᴇᴘ 1/3: ᴇɴᴛᴇʀ ᴀᴘɪ ɪᴅ')}</b>"
     await safe_edit(q, text)
 
-# NAYA COMMAND: /info <user_id>
+# FIXED COMMAND: /info <user_id>
 async def cmd_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if update.effective_user.id != config.OWNER_ID:
         return
@@ -38,13 +38,16 @@ async def cmd_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         target_id = int(context.args[0])
         
-        # Telegram API se user ki info fetch karna
-        user = await context.bot.get_chat(target_id)
+        # Naam nikalne ki koshish karo, agar na mile toh "Unknown User" use karo
+        try:
+            user = await context.bot.get_chat(target_id)
+            name = user.full_name
+            username = f"@{user.username}" if user.username else "No Username"
+        except Exception:
+            name = "Click to View Profile"
+            username = "Hidden/Unknown"
         
-        name = user.full_name
-        username = f"@{user.username}" if user.username else "No Username"
-        
-        # Clickable mention link (bina username ke bhi kaam karta hai)
+        # Ye link bina username ke bhi profile khol dega
         mention = f'<a href="tg://user?id={target_id}">{name}</a>'
         
         text = (
@@ -59,10 +62,10 @@ async def cmd_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_html(text)
         
     except Exception as e:
-        await update.message.reply_text(f"❌ Error: Could not fetch user. {e}")
+        await update.message.reply_text(f"❌ Error: Invalid ID format.")
 
 def register(app: Application) -> None:
     app.add_handler(CommandHandler("admin", cmd_admin))
-    app.add_handler(CommandHandler("info", cmd_info)) # Naya handler
+    app.add_handler(CommandHandler("info", cmd_info))
     app.add_handler(CallbackQueryHandler(cb_admin_panel, pattern="^admin:panel$"))
     app.add_handler(CallbackQueryHandler(cb_admin_addapi, pattern="^admin:addapi$"))
