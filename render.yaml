@@ -1,0 +1,27 @@
+# ============================================================
+# render.yaml — Render.com Service Definition
+# Deploy this repo as a Web Service on Render's free tier.
+# UptimeRobot should ping https://<your-app>.onrender.com/ping
+# every 5 minutes to prevent the dyno from sleeping.
+# ============================================================
+
+services:
+  - type: web
+    name: velyn-nox-premium
+    runtime: python
+    region: singapore          # closest to Telegram's servers
+    plan: free
+
+    buildCommand: pip install -r requirements.txt
+
+    startCommand: python main.py
+
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+
+    # Render will auto-assign a public URL and set PORT env var.
+    # Flask reads config.FLASK_PORT (8080); ensure they match.
+    healthCheckPath: /ping
+
+    autoDeploy: true           # redeploy on every git push to main
