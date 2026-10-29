@@ -1,69 +1,50 @@
-import os
-import threading
-import logging
-
+import os, threading, logging
 from flask import Flask
 from telegram.ext import Application
 from telegram.request import HTTPXRequest
-
+from telegram import Update
+from telegram.ext import ContextTypes
 import config
 import database.db as db
-from handlers import start, admin, scraper, states, help
+from handlers import start, admin, scraper, states, help, router
 
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO,
-)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logging.getLogger("httpx").setLevel(logging.WARNING)
-logging.getLogger("telethon").setLevel(logging.WARNING)
 
-# ── Flask health check ────────────────────────────────────────
-flask_app = Flask(__name__)
+app = Flask(__name__)
+@app.route('/')
+def health_check(): return "Bot is Alive!"
 
-@flask_app.route("/")
-def health_check():
-    return "Nox Syndicate Bot — Online ✅", 200
+def run_flask():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
 
-def run_flask() -> None:
-    port = int(os.environ.get("PORT", config.FLASK_PORT))
-    flask_app.run(host="0.0.0.0", port=port, use_reloader=False)
+async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger = logging.getLogger(__name__)
+    logger.error(msg="Exception while handling an update:", exc_info=context.error)
+    # Agar update message hai, toh user ko error batao
+    if update and update.effective_message:
+        try:
+            await update.effective_message.reply_text(f"❌ Internal Error: {context.error}")
+        except: pass
 
-
-# ── Global error handler ──────────────────────────────────────
-async def error_handler(update: object, context) -> None:
-    logging.warning(f"Update caused error: {context.error}")
-
-
-# ── Entry point ───────────────────────────────────────────────
-def main() -> None:
-    # Start Flask in daemon thread so Render keeps the dyno alive
+def main():
     threading.Thread(target=run_flask, daemon=True).start()
-    logging.info("Flask health check thread started.")
-
     db.init_db()
-    logging.info("Database initialised.")
 
     request = HTTPXRequest(connect_timeout=30.0, read_timeout=30.0)
-    application = (
-        Application.builder()
-        .token(config.BOT_TOKEN)
-        .request(request)
-        .build()
-    )
+    application = Application.builder().token(config.BOT_TOKEN).request(request).build()
 
-    # Register handlers — ORDER MATTERS:
-    # scraper, admin, help, start first; states LAST (catches all text)
     scraper.register(application)
+    start.register(application)
     admin.register(application)
     help.register(application)
-    start.register(application)
-    states.register(application)     # ← MUST be last
+    router.register(application)
+    states.register(application)
 
     application.add_error_handler(error_handler)
-
-    logging.info("Nox Syndicate Bot is live!")
+    logging.info("Enterprise Bot is Live!")
     application.run_polling(drop_pending_updates=True)
-
 
 if __name__ == "__main__":
     main()

@@ -1,13 +1,12 @@
-import io, os, math, random, urllib.request
+import io, os, math, random
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from utils.text import sc
 
-BG         = (5, 0, 0)         # Ekdam kaala, thoda sa red tint ke sath
-GRID_COLOR = (25, 0, 0)        # Dark red grid
-RED_DARK   = (100, 0, 0)       # Blood red
-RED_DIM    = (60, 0, 0)        # Muted dark red
+BG         = (5, 0, 0)
+GRID_COLOR = (25, 0, 0)
+RED_DARK   = (100, 0, 0)
+RED_DIM    = (60, 0, 0)
 
-# Sabhi themes ab dark red base pe hain (thoda variation ke sath)
 SECTION_THEMES = {
     "SYSTEM OVERRIDE": {"neon": (150, 0, 0), "grid": (30, 0, 0), "sub": (90, 0, 0)},
     "PREMIUM ACCESS":  {"neon": (180, 80, 0), "grid": (40, 15, 0), "sub": (120, 50, 0)},
@@ -18,16 +17,17 @@ SECTION_THEMES = {
 }
 DEFAULT_THEME = {"neon": (150, 0, 0), "grid": (30, 0, 0), "sub": (90, 0, 0)}
 
-FONT_PATH = "arial.ttf"
+FONT_CANDIDATES = [
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+    "/data/data/com.termux/files/usr/share/fonts/TTF/DejaVuSans-Bold.ttf",
+    "/system/fonts/Roboto-Bold.ttf",
+]
+
 def _font(size: int) -> ImageFont.ImageFont:
-    if not os.path.exists(FONT_PATH):
-        try:
-            url = "https://github.com/matomo-org/travis-scripts/raw/master/fonts/Arial.ttf"
-            urllib.request.urlretrieve(url, FONT_PATH)
-        except: pass
-    
-    if os.path.exists(FONT_PATH):
-        return ImageFont.truetype(FONT_PATH, size)
+    for p in FONT_CANDIDATES:
+        if os.path.exists(p):
+            return ImageFont.truetype(p, size)
     return ImageFont.load_default()
 
 def _resample():
@@ -49,7 +49,6 @@ def generate_banner(avatar_bytes: bytes | None, title: str = "SYSTEM OVERRIDE") 
     for x in range(0, W, 40): draw.line([(x, 0), (x, H)], fill=GRID, width=1)
     for y in range(0, H, 40): draw.line([(0, y), (W, y)], fill=GRID, width=1)
 
-    # Dark red glow
     glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     gd   = ImageDraw.Draw(glow)
     gd.ellipse([W//2-260, H//2-260, W//2+260, H//2+260], fill=(*NEON, 60))
@@ -67,7 +66,6 @@ def generate_banner(avatar_bytes: bytes | None, title: str = "SYSTEM OVERRIDE") 
 
     for y in range(0, H, 8): draw.line([(0, y), (W, y)], fill=(10, 0, 0), width=1)
 
-    # Dark text
     draw.text((72, 55), sc(title.upper()), font=_font(30), fill=NEON)
     draw.text((W-380, H-75), "R O O T   A C C E S S", font=_font(20), fill=SUB)
     draw.text((72, H-55), "N O X   S Y N D I C A T E  //  v2.0", font=_font(16), fill=RED_DIM)
