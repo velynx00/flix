@@ -1,21 +1,11 @@
-# ============================================================
-# keyboards/menus.py — All Inline Keyboards for Velyn Nox Premium
-# ============================================================
-
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-
 import config
-from utils.text import (
-    sc, LABEL_CANCEL, LABEL_BACK, LABEL_YES, LABEL_NO,
-    LABEL_EXPORT, LABEL_MYPLAN, LABEL_GRANT, LABEL_REVOKE_P,
-    LABEL_STATS, LABEL_BCAST, LABEL_ADMIN, LABEL_REVOKE
-)
+from utils.text import sc, LABEL_CANCEL, LABEL_BACK, LABEL_YES, LABEL_NO, LABEL_EXPORT, LABEL_MYPLAN, LABEL_GRANT, LABEL_REVOKE_P, LABEL_STATS, LABEL_BCAST, LABEL_ADMIN, LABEL_REVOKE
 
 def _kb(rows: list[list[InlineKeyboardButton]]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(rows)
 
 def main_menu() -> InlineKeyboardMarkup:
-    # FIX: 2x2 Grid layout with Advanced Catchy Text
     return _kb([
         [
             InlineKeyboardButton(f"⚡ {sc('ꜱᴄʀᴀᴘᴇ')}", callback_data="menu:scrape", style="primary"),
