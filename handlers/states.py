@@ -4,15 +4,13 @@ from telegram.constants import ParseMode
 from telegram.ext import Application, MessageHandler, filters, ContextTypes
 from telethon import TelegramClient
 from telethon.sessions import StringSession
-import database.db as db
+from database.db import db
 from core.engine import do_scrape
 from utils.text import sc
 
 logger = logging.getLogger(__name__)
 
-# FIX: Ye function miss ho gaya tha
 def clear_all(user_id):
-    # Purane states clear karne ke liye
     pass
 
 async def handle_states(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -90,7 +88,7 @@ async def handle_states(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         else:
             context.user_data['waiting_for'] = None
             apis = db.get_apis()
-            if not apis: return await update.message.reply_text("❌ No API configured.")
+            if not apis: return await update.message.reply_text("❌ No API configured. Use Setup API.")
             await update.message.reply_text(f"⏳ <b>{sc('ꜱᴄʀᴀᴘɪɴɢ ꜱᴛᴀʀᴛᴇᴅ...')}</b>", parse_mode=ParseMode.HTML)
             asyncio.create_task(do_scrape(update.get_bot(), update.message.chat_id, apis[0], context.user_data['target'], limit))
             
