@@ -18,17 +18,17 @@ from handlers import states
 logger = logging.getLogger(__name__)
 
 def _build_welcome(user_id: int, user_name: str) -> str:
-    # REMOVED /admin line AND MADE TEXT BOLD (MOTA)
+    # SHORTER TEXT, FULL BOLD, THICKER LINES (━━━)
     return (
         f"<blockquote>🕷️ <b>{sc('ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ᴠᴇʟʏɴ ɴᴏx')}</b></blockquote>\n"
-        f"<b>★ ───────────────────── ★</b>\n"
-        f"👋 Hey <a href='tg://user?id={user_id}'><b>{escape_html(user_name)}</b></a>!\n"
-        f"⚡ <b>{sc('ᴛʜᴇ ᴜʟᴛɪᴍᴀᴛᴇ ᴛᴇʟᴇɢʀᴀᴍ ꜱᴄʀᴀᴘᴇʀ & ᴀᴅᴅᴇʀ')}</b>\n"
-        f"<b>★ ───────────────────── ★</b>\n"
-        f"<b>1️⃣ {sc('ꜱᴄʀᴀᴘᴇ ᴍᴇᴍʙᴇʀꜱ')}</b> : {sc('ᴇxᴛʀᴀᴄᴛ ꜰʀᴏᴍ ɢʀᴏᴜᴘ')}\n"
-        f"<b>2️⃣ {sc('ᴀᴅᴅ ᴍᴇᴍʙᴇʀꜱ')}</b> : {sc('ɪɴᴊᴇᴄᴛ ɪɴᴛᴏ ɢʀᴏᴜᴘ')}\n"
-        f"<b>3️⃣ {sc('ᴄʜᴇᴄᴋ ꜱᴛᴀᴛᴜꜱ')}</b> : <code>/myplan</code>\n"
-        f"<b>★ ───────────────────── ★</b>\n"
+        f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
+        f"👋 <b>Hey</b> <a href='tg://user?id={user_id}'><b>{escape_html(user_name)}</b></a><b>!</b>\n"
+        f"⚡ <b>{sc('ᴛʜᴇ ᴜʟᴛɪᴍᴀᴛᴇ ᴛᴇʟᴇɢʀᴀᴍ ꜱᴄʀᴀᴘᴇʀ')}</b>\n"
+        f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
+        f"<b>1️⃣ {sc('ꜱᴄʀᴀᴘᴇ ᴍᴇᴍʙᴇʀꜱ')}</b>\n"
+        f"<b>2️⃣ {sc('ᴀᴅᴅ ᴍᴇᴍʙᴇʀꜱ')}</b>\n"
+        f"<b>3️⃣ {sc('ᴄʜᴇᴄᴋ ꜱᴛᴀᴛᴜꜱ')} : <code>/myplan</code></b>\n"
+        f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
         f"🛡 <b>{sc('ꜱᴇᴄᴜʀᴇ & ᴇɴᴄʀʏᴘᴛᴇᴅ')}</b>\n"
         f"🚀 <b>{sc('ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴠᴇʟʏɴ ɴᴏx')}</b>"
     )
