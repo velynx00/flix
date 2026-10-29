@@ -12,7 +12,6 @@ from handlers import states
 
 logger = logging.getLogger(__name__)
 
-# FIXED: Smooth Media Edit (No delete, no wait)
 async def safe_edit_media(q, text, title, reply_markup=None):
     dp_bytes = None
     try:
@@ -28,13 +27,23 @@ async def safe_edit_media(q, text, title, reply_markup=None):
     media = InputMediaPhoto(media=InputFile(banner, filename="menu_banner.png"), caption=text, parse_mode=ParseMode.HTML)
     
     try:
-        # Ye purane message ko hi naye photo me badal dega bina delete kiye
         await q.edit_message_media(media=media, reply_markup=reply_markup)
     except Exception as e:
         logger.warning(f"Media edit error: {e}")
         try:
             await q.edit_message_caption(caption=text, parse_mode=ParseMode.HTML, reply_markup=reply_markup)
         except: pass
+
+# NAYA FUNCTION: Text edit ke liye (Admin panel ise use karta hai)
+async def safe_edit(query, text, reply_markup=None):
+    try:
+        if query.message.photo:
+            await query.edit_message_caption(caption=text, parse_mode=ParseMode.HTML, reply_markup=reply_markup)
+        else:
+            await query.edit_message_text(text=text, parse_mode=ParseMode.HTML, reply_markup=reply_markup)
+    except Exception as e:
+        if "Message is not modified" not in str(e):
+            logger.warning(f"Edit error: {e}")
 
 def _build_welcome(user_id: int, user_name: str) -> str:
     return (
