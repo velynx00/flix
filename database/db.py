@@ -43,7 +43,6 @@ class DB:
         self.conn.commit()
 
     def has_session(self, user_id):
-        apis = self.get_apis()
-        return len(apis) > 0
+        return len(self.get_apis()) > 0
 
 db = DB()

@@ -5,7 +5,7 @@ from telegram.request import HTTPXRequest
 from telegram import Update
 from telegram.ext import ContextTypes
 import config
-import database.db as db
+from database.db import db
 from handlers import start, admin, scraper, states, help, router
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -29,9 +29,7 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def main():
     threading.Thread(target=run_flask, daemon=True).start()
-    db.init_db()
 
-    # Timeout badha diya taaki Render pe network drop na ho
     request = HTTPXRequest(connect_timeout=60.0, read_timeout=60.0)
     application = Application.builder().token(config.BOT_TOKEN).request(request).build()
 
@@ -44,7 +42,6 @@ def main():
 
     application.add_error_handler(error_handler)
     logging.info("Enterprise Bot is Live!")
-    # Drop pending updates hataya taaki purane messages process ho sakein
     application.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=False)
 
 if __name__ == "__main__":

@@ -88,7 +88,7 @@ async def handle_states(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         else:
             context.user_data['waiting_for'] = None
             apis = db.get_apis()
-            if not apis: return await update.message.reply_text("❌ No API configured. Use Setup API.")
+            if not apis: return await update.message.reply_text("❌ No API configured.")
             await update.message.reply_text(f"⏳ <b>{sc('ꜱᴄʀᴀᴘɪɴɢ ꜱᴛᴀʀᴛᴇᴅ...')}</b>", parse_mode=ParseMode.HTML)
             asyncio.create_task(do_scrape(update.get_bot(), update.message.chat_id, apis[0], context.user_data['target'], limit))
             

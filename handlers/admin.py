@@ -26,28 +26,22 @@ async def cb_admin_addapi(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     text = f"<b>{sc('ᴀᴅᴅ ꜱᴇꜱꜱɪᴏɴ')}</b>\n\n<b>{sc('ꜱᴛᴇᴘ 1/3: ᴇɴᴛᴇʀ ᴀᴘɪ ɪᴅ')}</b>"
     await safe_edit(q, text)
 
-# FIXED COMMAND: /info <user_id>
 async def cmd_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if update.effective_user.id != config.OWNER_ID:
-        return
-        
+    if update.effective_user.id != config.OWNER_ID: return
     if not context.args:
         await update.message.reply_text("Usage: <code>/info &lt;user_id&gt;</code>", parse_mode=ParseMode.HTML)
         return
-        
     try:
         target_id = int(context.args[0])
-        
         try:
             user = await context.bot.get_chat(target_id)
-            name = esc(user.full_name) # Escape HTML characters
+            name = esc(user.full_name)
             username = f"@{user.username}" if user.username else "No Username"
         except Exception:
             name = "Click to View Profile"
             username = "Hidden/Unknown"
         
         mention = f'<a href="tg://user?id={target_id}">{name}</a>'
-        
         text = (
             f"<b>👤 {sc('ᴜꜱᴇʀ ɪɴꜰᴏ')}</b>\n"
             f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
@@ -58,7 +52,6 @@ async def cmd_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             f"<i>{sc('ᴄʟɪᴄᴋ ᴛʜᴇ ɴᴀᴍᴇ ᴛᴏ ᴏᴘᴇɴ ᴘʀᴏꜰɪʟᴇ')}</i>"
         )
         await update.message.reply_html(text)
-        
     except Exception as e:
         await update.message.reply_text(f"❌ Error: {str(e)}")
 

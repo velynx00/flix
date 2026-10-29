@@ -2,12 +2,11 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import Application, CallbackQueryHandler, ContextTypes
 import config
-import database.db as db
+from database.db import db
 from keyboards.menus import scrape_menu, add_menu, back_btn
 from utils.text import sc
 from handlers.start import safe_edit_media, safe_edit
 
-# Premium check function
 def is_premium_or_owner(user_id):
     return user_id == config.OWNER_ID or db.is_premium(user_id)
 
@@ -15,15 +14,14 @@ async def cb_menu_scrape(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     q = update.callback_query
     await q.answer()
     
-    # Premium Check
     if not is_premium_or_owner(q.from_user.id):
-        return await q.answer("⚠️ Premium Required! Contact @Velynx007 to purchase.", show_alert=True)
+        return await q.answer("⚠️ Premium Required! Contact @Velynx007.", show_alert=True)
 
     text = (
         f"<b>⟢ {sc('ꜱᴄʀᴀᴘᴇʀ ᴇɴɢɪɴᴇ')} ⟢</b>\n\n"
         f"{sc('ᴇxᴛʀᴀᴄᴛ ᴍᴇᴍʙᴇʀꜱ ꜰʀᴏᴍ ᴀɴʏ ᴛᴇʟᴇɢʀᴀᴍ ɢʀᴏᴜᴘ.')}\n\n"
-        f"<b>{sc('ʟɪᴍɪᴛ')}:</b> 50 {sc('ᴍᴇᴍʙᴇʀꜱ ᴘᴇʀ ꜱᴇꜱꜱɪᴏɴ.')}\n"
-        f"<b>{sc('ᴘʀᴇꜱꜱ ꜱᴛᴀʀᴛ ꜱᴄʀᴀᴘᴇ ᴛᴏ ʙᴇɢɪɴ.')}</b>"
+        f"<b>{sc('ʟɪᴍɪᴛ')}:</b> 50 {sc('ᴍᴇᴍʙᴇʀꜱ.')}\n"
+        f"<b>{sc('ᴘʀᴇꜱꜱ ꜱᴛᴀʀᴛ ꜱᴄʀᴀᴘᴇ.')}</b>"
     )
     await safe_edit_media(q, text, "SCRAPER ENGINE", scrape_menu(), use_static=True)
 
@@ -31,15 +29,14 @@ async def cb_menu_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     q = update.callback_query
     await q.answer()
     
-    # Premium Check
     if not is_premium_or_owner(q.from_user.id):
-        return await q.answer("⚠️ Premium Required! Contact @Velynx007 to purchase.", show_alert=True)
+        return await q.answer("⚠️ Premium Required! Contact @Velynx007.", show_alert=True)
 
     text = (
         f"<b>✦ {sc('ᴀᴅᴅᴇʀ ᴇɴɢɪɴᴇ')} ✦</b>\n\n"
-        f"{sc('ɪɴᴊᴇᴄᴛ ᴍᴇᴍʙᴇʀꜱ ɪɴᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ꜰʀᴏᴍ ᴀ ꜱᴏᴜʀᴄᴇ ɢʀᴏᴜᴘ.')}\n\n"
-        f"<b>{sc('ʟɪᴍɪᴛ')}:</b> 50 {sc('ᴍᴇᴍʙᴇʀꜱ ᴘᴇʀ ꜱᴇꜱꜱɪᴏɴ.')}\n"
-        f"<b>{sc('ᴘʀᴇꜱꜱ ꜱᴛᴀʀᴛ ᴀᴅᴅɪɴɢ ᴛᴏ ʙᴇɢɪɴ.')}</b>"
+        f"{sc('ɪɴᴊᴇᴄᴛ ᴍᴇᴍʙᴇʀꜱ ɪɴᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ.')}\n\n"
+        f"<b>{sc('ʟɪᴍɪᴛ')}:</b> 50 {sc('ᴍᴇᴍʙᴇʀꜱ.')}\n"
+        f"<b>{sc('ᴘʀᴇꜱꜱ ꜱᴛᴀʀᴛ ᴀᴅᴅɪɴɢ.')}</b>"
     )
     await safe_edit_media(q, text, "ADDER ENGINE", add_menu(), use_static=True)
 
@@ -51,7 +48,7 @@ async def cb_scrape_start(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         
     context.user_data['action'] = 'scrape'
     context.user_data['waiting_for'] = 'target'
-    text = f"<b>{sc('ꜱᴛᴀʀᴛ ꜱᴄʀᴀᴘᴇ')}</b>\n\n<b>{sc('ꜱᴇɴᴅ ᴛʜᴇ ɢʀᴏᴜᴘ ʟɪɴᴋ ᴏʀ ᴜꜱᴇʀɴᴀᴍᴇ')}:</b>"
+    text = f"<b>{sc('ꜱᴛᴀʀᴛ ꜱᴄʀᴀᴘᴇ')}</b>\n\n<b>{sc('ꜱᴇɴᴅ ᴛʜᴇ ɢʀᴏᴜᴘ ʟɪɴᴋ')}:</b>"
     await safe_edit(q, text, back_btn())
 
 async def cb_add_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

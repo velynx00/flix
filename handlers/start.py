@@ -4,7 +4,7 @@ from telegram import Update, InputFile, InputMediaPhoto
 from telegram.constants import ParseMode
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes
 import config
-import database.db as db
+from database.db import db
 from keyboards.menus import main_menu, premium_menu, back_btn
 from utils.banner import generate_banner, generate_static_banner
 from utils.text import sc, escape_html
@@ -116,7 +116,6 @@ async def cb_menu_premium(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     )
     await safe_edit_media(q, text, "PREMIUM ACCESS", premium_menu(is_owner), use_static=True)
 
-# NAYA HANDLER: Normal user API setup
 async def cb_setup_api(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     q = update.callback_query
     await q.answer()
@@ -130,4 +129,4 @@ def register(app: Application) -> None:
     app.add_handler(CommandHandler("myplan", cmd_myplan))
     app.add_handler(CallbackQueryHandler(cb_menu_back, pattern="^menu:back$"))
     app.add_handler(CallbackQueryHandler(cb_menu_premium, pattern="^menu:premium$"))
-    app.add_handler(CallbackQueryHandler(cb_setup_api, pattern="^setup:api$")) # Naya trigger
+    app.add_handler(CallbackQueryHandler(cb_setup_api, pattern="^setup:api$"))
