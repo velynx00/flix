@@ -16,7 +16,10 @@ def clear_all(user_id):
 async def handle_states(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     waiting_for = context.user_data.get('waiting_for')
     if not waiting_for: return
-    text = update.message.text
+    
+    # Check if it's a document or text
+    text = update.message.text if update.message.text else ""
+    document = update.message.document
 
     # ── NORMAL SINGLE API FLOW ──
     if waiting_for == 'api_id':
@@ -79,37 +82,58 @@ async def handle_states(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     elif waiting_for == 'bulk_api_hash':
         context.user_data['bulk_api_hash'] = text
         context.user_data['waiting_for'] = 'bulk_sessions'
-        await update.message.reply_text(f"<b>{sc('ꜱᴛᴇᴘ 3/3: ᴘᴀꜱᴛᴇ ꜱᴇꜱꜱɪᴏɴꜱ')}</b>\n\nSend session strings (one per line):", parse_mode=ParseMode.HTML)
+        await update.message.reply_text(
+            f"<b>{sc('ꜱᴛᴇᴘ 3/3: ꜱᴇɴᴅ ꜱᴇꜱꜱɪᴏɴ ꜰɪʟᴇ')}</b>\n\n"
+            f"<b>{sc('ᴛxᴛ ꜰɪʟᴇ ꜱᴇɴᴅ ᴋᴀʀᴏ')}</b> ({sc('ᴇᴋ ʟɪɴᴇ ᴍᴇ ᴇᴋ ꜱᴇꜱꜱɪᴏɴ')})", 
+            parse_mode=ParseMode.HTML
+        )
 
     elif waiting_for == 'bulk_sessions':
-        sessions = [s.strip() for s in text.split('\n') if s.strip()]
-        context.user_data['waiting_for'] = None
-        await update.message.reply_text(f"⏳ Checking {len(sessions)} sessions... (Please wait)")
+        # Check if user sent a file
+        if not document:
+            return await update.message.reply_text("❌ Please send a valid `.txt` file.", parse_mode=ParseMode.HTML)
+            
+        await update.message.reply_text(f"📥 Downloading file...")
+        
+        try:
+            file = await context.bot.get_file(document.file_id)
+            file_content = await file.download_as_bytearray()
+            content_str = file_content.decode('utf-8')
+            
+            sessions = [s.strip() for s in content_str.split('\n') if s.strip()]
+            context.user_data['waiting_for'] = None
+            
+            await update.message.reply_text(f"⏳ Checking {len(sessions)} sessions... (Please wait)")
 
-        api_id = int(context.user_data['bulk_api_id'])
-        api_hash = context.user_data['bulk_api_hash']
-        
-        valid_count = 0
-        dead_count = 0
-        
-        for idx, sess_str in enumerate(sessions, 1):
-            try:
-                client = TelegramClient(StringSession(sess_str), api_id, api_hash)
-                await client.connect()
-                if await client.is_user_authorized():
-                    me = await client.get_me()
-                    db.add_api(api_id, api_hash, f"Bulk_{me.id}", sess_str)
-                    valid_count += 1
-                    await update.message.reply_text(f"✅ Valid: {me.first_name} ({me.phone})")
-                else:
+            api_id = int(context.user_data['bulk_api_id'])
+            api_hash = context.user_data['bulk_api_hash']
+            
+            valid_count = 0
+            dead_count = 0
+            
+            for idx, sess_str in enumerate(sessions, 1):
+                try:
+                    client = TelegramClient(StringSession(sess_str), api_id, api_hash)
+                    await client.connect()
+                    if await client.is_user_authorized():
+                        me = await client.get_me()
+                        phone = me.phone if me.phone else f"Bulk_{me.id}"
+                        db.add_api(api_id, api_hash, phone, sess_str)
+                        valid_count += 1
+                        await update.message.reply_text(f"✅ Valid: {me.first_name} (+{phone})")
+                    else:
+                        dead_count += 1
+                        await update.message.reply_text(f"❌ Dead/Invalid Session ({idx})")
+                    await client.disconnect()
+                except Exception as e:
                     dead_count += 1
-                    await update.message.reply_text(f"❌ Dead/Invalid Session ({idx})")
-                await client.disconnect()
-            except Exception as e:
-                dead_count += 1
-                await update.message.reply_text(f"❌ Error ({idx}): Invalid Session")
-        
-        await update.message.reply_text(f"✅ <b>Bulk Import Complete!</b>\n\nValid: {valid_count}\nDead/Invalid: {dead_count}", parse_mode=ParseMode.HTML)
+                    await update.message.reply_text(f"❌ Error ({idx}): Invalid Session")
+            
+            await update.message.reply_text(f"✅ <b>Bulk Import Complete!</b>\n\nValid: {valid_count}\nDead: {dead_count}", parse_mode=ParseMode.HTML)
+            
+        except Exception as e:
+            context.user_data['waiting_for'] = None
+            await update.message.reply_text(f"❌ File Error: {e}")
 
     # ── SCRAPE/ADD FLOW ──
     elif waiting_for == 'target':
@@ -144,4 +168,7 @@ async def handle_states(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         asyncio.create_task(do_scrape(update.get_bot(), update.message.chat_id, apis[0], context.user_data['target'], context.user_data['limit'], dest))
 
 def register(app: Application) -> None:
+    # Text handler (commands ke alawa)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_states))
+    # Document handler (file upload ke liye)
+    app.add_handler(MessageHandler(filters.Document.ALL, handle_states))
