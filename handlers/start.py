@@ -57,29 +57,25 @@ async def safe_edit(query, text, reply_markup=None):
 
 def _build_welcome(user_id: int, user_name: str) -> str:
     return (
-        f"<blockquote>"
-        f"🕷️  <b>{sc('ɴᴏx ꜱʏɴᴅɪᴄᴀᴛᴇ')}  ·  {sc('ᴀᴅᴠᴀɴᴄᴇᴅ ꜱʏꜱᴛᴇᴍ')}</b>"
-        f"</blockquote>\n"
-        f"<b>╔══════════════════════╗</b>\n"
-        f"<b>  👋 {sc('ʜᴇʏ')}, <a href='tg://user?id={user_id}'>{escape_html(user_name)}</a></b>\n"
-        f"<b>  ⚡ {sc('ᴛʜᴇ ᴜʟᴛɪᴍᴀᴛᴇ ꜱᴄʀᴀᴘᴇʀ ✦ ᴀᴅᴅᴇʀ')}</b>\n"
-        f"<b>╚══════════════════════╝</b>\n\n"
-        f"<b>▸ {sc('ꜱᴄʀᴀᴘᴇ ᴍᴇᴍʙᴇʀꜱ')}</b>  <i>→ extract active users</i>\n"
-        f"<b>▸ {sc('ᴀᴅᴅ ᴍᴇᴍʙᴇʀꜱ')}</b>     <i>→ inject to your group</i>\n"
-        f"<b>▸ {sc('ᴜᴘʟᴏᴀᴅ ᴄꜱᴠ')}</b>      <i>→ add from file</i>\n\n"
-        f"<b>━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
-        f"🛡 <b>{sc('ꜱᴇᴄᴜʀᴇ')}  ·  {sc('ᴇɴᴄʀʏᴘᴛᴇᴅ')}  ·  {sc('ᴘʀɪᴠᴀᴛᴇ')}</b>\n"
-        f"<code>/myplan</code>  <b>→ check your plan</b>"
+        f"<blockquote>🕷️ <b>{sc('ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ɴᴏx ꜱʏɴᴅɪᴄᴀᴛᴇ')}</b></blockquote>\n"
+        f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
+        f"👋 <b>Hey</b> <a href='tg://user?id={user_id}'><b>{escape_html(user_name)}</b></a><b>!</b>\n"
+        f"⚡ <b>{sc('ᴛʜᴇ ᴜʟᴛɪᴍᴀᴛᴇ ᴛᴇʟᴇɢʀᴀᴍ ꜱᴄʀᴀᴘᴇʀ')}</b>\n"
+        f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
+        f"<b>1️⃣ {sc('ꜱᴄʀᴀᴘᴇ ᴍᴇᴍʙᴇʀꜱ')}</b>  <i>→ extract active users</i>\n"
+        f"<b>2️⃣ {sc('ᴀᴅᴅ ᴍᴇᴍʙᴇʀꜱ')}</b>     <i>→ inject to your group</i>\n"
+        f"<b>3️⃣ {sc('ᴜᴘʟᴏᴀᴅ ᴄꜱᴠ')}</b>      <i>→ add from file</i>\n"
+        f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
+        f"🛡 <b>{sc('ꜱᴇᴄᴜʀᴇ & ᴇɴᴄʀʏᴘᴛᴇᴅ')}</b>   "
+        f"🚀 <b>{sc('ᴘᴏᴡᴇʀᴇᴅ ʙʏ ɴᴏx')}</b>\n"
+        f"<code>/myplan</code>  <b>→ {sc('ᴄʜᴇᴄᴋ ʏᴏᴜʀ ᴘʟᴀɴ')}</b>"
     )
 
 def _build_boot_frame(frame_idx: int, user_name: str) -> str:
     bar = BOOT_FRAMES[frame_idx]
-    if frame_idx < len(BOOT_FRAMES) - 1:
-        status = sc("ɪɴɪᴛɪᴀʟɪᴢɪɴɢ...")
-    else:
-        status = sc("ꜱʏꜱᴛᴇᴍ ʀᴇᴀᴅʏ ✓")
+    status = sc("ꜱʏꜱᴛᴇᴍ ʀᴇᴀᴅʏ ✓") if frame_idx >= len(BOOT_FRAMES) - 1 else sc("ɪɴɪᴛɪᴀʟɪᴢɪɴɢ...")
     return (
-        f"<b>{sc('ɴᴏx ꜱʏɴᴅɪᴄᴀᴛᴇ')} — {sc('ʙᴏᴏᴛ ꜱᴇǫᴜᴇɴᴄᴇ')}</b>\n\n"
+        f"<blockquote><b>{sc('ɴᴏx ꜱʏɴᴅɪᴄᴀᴛᴇ')} — {sc('ʙᴏᴏᴛ ꜱᴇǫᴜᴇɴᴄᴇ')}</b></blockquote>\n\n"
         f"{bar}\n\n"
         f"<b>{status}</b>"
     )
@@ -108,12 +104,12 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     db.upsert_user(user.id, user.username, user.full_name)
     states.clear_all(user.id)
 
-    # Step 1 — send initial boot frame (plain text, fast)
+    # Step 1 — initial boot frame
     boot_msg = await update.message.reply_html(
         _build_boot_frame(0, user.full_name)
     )
 
-    # Step 2 — animate the boot bar (frames 1-10) while fetching DP
+    # Step 2 — animate boot bar while fetching DP
     dp_task = asyncio.create_task(_fetch_user_dp(context, user.id))
 
     for i in range(1, len(BOOT_FRAMES)):
@@ -127,7 +123,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     dp_bytes = await dp_task
 
-    # Step 3 — replace boot message with banner + welcome
+    # Step 3 — replace boot with banner + welcome
     welcome_text = _build_welcome(user.id, user.full_name)
     try:
         banner = generate_banner(dp_bytes, title="SYSTEM OVERRIDE")
@@ -159,9 +155,8 @@ async def cmd_myplan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         plan_line = f"🔓 <b>{sc('ꜰʀᴇᴇ ᴘʟᴀɴ')} — {sc('ᴜᴘɢʀᴀᴅᴇ ᴀᴠᴀɪʟᴀʙʟᴇ')}</b>"
 
     text = (
-        f"<b>╔═══════════════════╗</b>\n"
-        f"<b>   📊 {sc('ʏᴏᴜʀ ᴘʟᴀɴ ꜱᴛᴀᴛᴜꜱ')}</b>\n"
-        f"<b>╚═══════════════════╝</b>\n\n"
+        f"<blockquote>📊 <b>{sc('ʏᴏᴜʀ ᴘʟᴀɴ ꜱᴛᴀᴛᴜꜱ')}</b></blockquote>\n"
+        f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n\n"
         f"{plan_line}\n\n"
         f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
         f"💬 {sc('ᴄᴏɴᴛᴀᴄᴛ')} <a href='https://t.me/Velynx007'>@Velynx007</a> {sc('ᴛᴏ ᴜᴘɢʀᴀᴅᴇ.')}"
@@ -200,8 +195,9 @@ async def cb_menu_premium(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         badge = f"🔓 {sc('ꜰʀᴇᴇ — ᴜᴘɢʀᴀᴅᴇ ᴀᴠᴀɪʟᴀʙʟᴇ')}"
 
     text = (
-        f"<b>💎 {sc('ɴᴏx ꜱʏɴᴅɪᴄᴀᴛᴇ ᴘʀᴇᴍɪᴜᴍ')} 💎</b>\n"
+        f"<blockquote>💎 <b>{sc('ɴᴏx ꜱʏɴᴅɪᴄᴀᴛᴇ ᴘʀᴇᴍɪᴜᴍ')}</b></blockquote>\n"
         f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
+        f"🔥 <b>{sc('ᴜɴʟᴏᴄᴋ ᴛʜᴇ ᴜʟᴛɪᴍᴀᴛᴇ ᴘᴏᴡᴇʀ')}</b>\n"
         f"<b>{sc('ʏᴏᴜʀ ꜱᴛᴀᴛᴜꜱ')}:</b> {badge}\n\n"
         f"<b>{sc('ᴘʀᴇᴍɪᴜᴍ ʙᴇɴᴇꜰɪᴛꜱ')}</b>\n"
         f"▸ ♾️  {sc('ᴜɴʟɪᴍɪᴛᴇᴅ ꜱᴄʀᴀᴘɪɴɢ')}\n"
@@ -221,7 +217,7 @@ async def cb_setup_api(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     states.clear_all(q.from_user.id)
     context.user_data['waiting_for'] = 'api_id'
     text = (
-        f"<b>🔑 {sc('ꜱᴇꜱꜱɪᴏɴ ꜱᴇᴛᴜᴘ')}</b>\n"
+        f"<blockquote><b>🔑 {sc('ꜱᴇꜱꜱɪᴏɴ ꜱᴇᴛᴜᴘ')}</b></blockquote>\n"
         f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n\n"
         f"<b>{sc('ꜱᴛᴇᴘ')} 1/3 ▸</b> {sc('ᴇɴᴛᴇʀ ᴀᴘɪ ɪᴅ')}\n\n"
         f"<i>Get it from my.telegram.org → API development tools</i>"
