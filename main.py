@@ -1,166 +1,63 @@
-# ============================================================
-# main.py — Velyn Nox Premium Bot Entry Point
-#
-# Responsibilities:
-#   1. Initialise logging
-#   2. Initialise the SQLite database (schema creation)
-#   3. Spin up the Flask health-check server in a daemon thread
-#      (keeps Render's free dyno alive via UptimeRobot pings)
-#   4. Build the PTB Application
-#   5. Register all handlers (start, admin, scraper, router)
-#   6. Run the bot with run_polling()
-# ============================================================
-
-from __future__ import annotations
-
-import logging
+import os
+import asyncio
 import threading
-from typing import Final
-
+import logging
 from flask import Flask
-from telegram.ext import Application
-
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters
+from telegram.request import HTTPXRequest
 import config
-import database.db as db
-from handlers import start, admin, scraper, router
+from handlers import start, admin, scraper, states
+from database import db
 
-# ── Logging setup ─────────────────────────────────────────────
-logging.basicConfig(
-    format  = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
-    datefmt = "%Y-%m-%d %H:%M:%S",
-    level   = logging.INFO,
-)
-# Suppress overly verbose library loggers
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logging.getLogger("httpx").setLevel(logging.WARNING)
-logging.getLogger("telethon").setLevel(logging.WARNING)
-logging.getLogger("telegram").setLevel(logging.WARNING)
 
-logger = logging.getLogger(__name__)
+# ── FLASK FOR RENDER ──
+app = Flask(__name__)
 
-
-# ── Flask health-check app ────────────────────────────────────
-
-flask_app: Final[Flask] = Flask(__name__)
-
-
-@flask_app.route("/")
+@app.route('/')
 def health_check():
-    """
-    Simple HTTP endpoint so UptimeRobot / Render can verify the
-    dyno is alive.
+    return "Bot is Alive!"
 
-    Returns
-    -------
-    tuple[str, int]
-        A 200 OK response with a plain-text body.
-    """
-    return f"{config.BOT_NAME} — Online", 200
+def run_flask():
+    # Render assigns a random PORT env variable
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
 
+# ── ERROR HANDLER ──
+async def error_handler(update, context):
+    logging.warning(f"Update caused error: {context.error}")
 
-@flask_app.route("/ping")
-def ping():
-    """Secondary ping endpoint."""
-    return "pong", 200
+# ── MAIN BOT LOGIC ──
+def main():
+    # Start Flask in a background thread
+    threading.Thread(target=run_flask, daemon=True).start()
 
-
-def _run_flask() -> None:
-    """
-    Start Flask in blocking mode.
-    Intended to be run inside a daemon thread so it does not
-    prevent the main asyncio loop from exiting.
-    """
-    flask_app.run(
-        host   = "0.0.0.0",
-        port   = config.FLASK_PORT,
-        debug  = False,
-        use_reloader = False,
-    )
-
-
-def start_flask_thread() -> None:
-    """
-    Launch the Flask server in a background daemon thread.
-    The thread is set as a daemon so Python will not wait for
-    it when the main program exits.
-    """
-    thread = threading.Thread(target=_run_flask, daemon=True, name="flask-health")
-    thread.start()
-    logger.info(f"[MAIN] Flask health server started on port {config.FLASK_PORT}")
-
-
-# ── PTB Application builder ───────────────────────────────────
-
-def build_application() -> Application:
-    """
-    Construct and configure the python-telegram-bot Application.
-
-    Steps:
-        1. Use ApplicationBuilder with the bot token.
-        2. Register handlers from each module in priority order:
-               scraper (group 1-4) → start → admin (group 5)
-               → router (groups 8-10) → error handler
-
-    Returns
-    -------
-    Application
-    """
-    app = (
-        Application.builder()
-        .token(config.BOT_TOKEN)
-        .build()
-    )
-
-    # ── Register handlers in dependency order ─────────────────
-    # scraper registers groups 1-4 (document, session text, scrape text, add text)
-    scraper.register(app)
-
-    # start registers commands + menu callbacks
-    start.register(app)
-
-    # admin registers /admin command + admin callbacks + group-5 text handler
-    admin.register(app)
-
-    # router registers fallback handlers at groups 8-10 + error handler
-    router.register(app)
-
-    logger.info("[MAIN] All handlers registered.")
-    return app
-
-
-# ── Entry point ───────────────────────────────────────────────
-
-def main() -> None:
-    """
-    Full startup sequence:
-        1. Init DB
-        2. Start Flask thread
-        3. Build PTB app
-        4. Run polling loop (blocks until Ctrl-C or SIGTERM)
-    """
-    logger.info(
-        f"[MAIN] Starting {config.BOT_NAME} v{config.VERSION} "
-        f"— owner={config.OWNER_ID}"
-    )
-
-    # ── 1. Database ───────────────────────────────────────────
+    # Init Database
     db.init_db()
 
-    # ── 2. Flask thread ───────────────────────────────────────
-    start_flask_thread()
+    # Higher timeouts for Termux/Render network drops
+    request = HTTPXRequest(connect_timeout=30.0, read_timeout=30.0)
+    application = Application.builder().token(config.BOT_TOKEN).request(request).build()
 
-    # ── 3 + 4. PTB app ───────────────────────────────────────
-    application = build_application()
+    # Commands
+    application.add_handler(CommandHandler("start", start.start_cmd))
+    application.add_handler(CommandHandler("myplan", start.myplan_cmd))
+    application.add_handler(CommandHandler("admin", admin.admin_cmd))
+    
+    # Callbacks (Buttons)
+    application.add_handler(CallbackQueryHandler(admin.admin_callbacks, pattern="^admin:"))
+    application.add_handler(CallbackQueryHandler(scraper.scraper_callbacks, pattern="^menu:(scrape|add)$"))
+    application.add_handler(CallbackQueryHandler(start.main_router))
+    
+    # State Machine Handlers (Text inputs)
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, states.handle_states))
 
-    logger.info("[MAIN] Bot polling started. Press Ctrl-C to stop.")
-    application.run_polling(
-        allowed_updates = [
-            "message",
-            "callback_query",
-            "inline_query",
-        ],
-        drop_pending_updates = True,   # ignore backlog on restart
-    )
+    # Error Handler
+    application.add_error_handler(error_handler)
 
+    logging.info("Enterprise Bot is Live!")
+    application.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
     main()
