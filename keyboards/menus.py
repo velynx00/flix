@@ -13,10 +13,10 @@ def main_menu() -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(f"💎 {sc('ᴘʀᴇᴍɪᴜᴍ')}", callback_data="menu:premium", style="primary"),
-            InlineKeyboardButton(f"❓ {sc('ʜᴇʟᴘ')}", callback_data="menu:help", style="danger"),
+            InlineKeyboardButton(f"❓ {sc('ʜᴇʟᴘ')}", callback_data="menu:help", style="success"), # Green
         ],
         [
-            InlineKeyboardButton(f"📢 {sc('ᴜᴘᴅᴀᴛᴇꜱ')}", url=config.UPDATE_CHANNEL_URL, style="primary"),
+            InlineKeyboardButton(f"📢 {sc('ᴜᴘᴅᴀᴛᴇꜱ')}", url=config.UPDATE_CHANNEL_URL, style="danger"), # Red
         ],
     ])
 
@@ -41,11 +41,10 @@ def add_menu() -> InlineKeyboardMarkup:
     ])
 
 def premium_menu(is_owner: bool = False) -> InlineKeyboardMarkup:
-    rows = [
+    return _kb([
         [InlineKeyboardButton(f"💬 {sc('ᴄᴏɴᴛᴀᴄᴛ ᴏᴡɴᴇʀ')} (@Velynx007)", url="https://t.me/Velynx007", style="primary")],
         [InlineKeyboardButton(f"↩ {sc('ʙᴀᴄᴋ')}", callback_data="menu:back", style="danger")],
-    ]
-    return _kb(rows)
+    ])
 
 def admin_panel() -> InlineKeyboardMarkup:
     return _kb([
