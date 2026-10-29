@@ -1,13 +1,5 @@
 # ============================================================
 # handlers/start.py — /start command + Main Menu Callbacks
-#
-# Responsibilities:
-#   • /start   — Send welcome message with banner (has_spoiler=True)
-#   • /myplan  — Show premium plan details
-#   • /status  — Show usage stats
-#   • Callback: menu:back, menu:scrape, menu:add, menu:premium
-#   • Callback: status:refresh
-#   • Callback: op:cancel   — Request operation abort
 # ============================================================
 
 from __future__ import annotations
@@ -47,18 +39,6 @@ logger = logging.getLogger(__name__)
 # ── Helpers ───────────────────────────────────────────────────
 
 def _build_welcome(user_id: int, user_name: str) -> str:
-    """
-    Compose the HTML welcome message exactly as specified.
-
-    Parameters
-    ----------
-    user_id   : int — Telegram user ID for the mention link.
-    user_name : str — Display name.
-
-    Returns
-    -------
-    str — HTML string ready for parse_mode=HTML.
-    """
     return (
         f"<b>⧩ {sc('Velyn Nox Premium')} ⧩</b>\n"
         f"<b>{sc('The Ultimate Telegram Scraper & Adder')}</b>\n\n"
@@ -75,24 +55,12 @@ def _build_welcome(user_id: int, user_name: str) -> str:
 
 
 def _build_status_text(ctx: dict) -> str:
-    """
-    Build a formatted /status message from the user's context dict.
-
-    Parameters
-    ----------
-    ctx : dict — Output of db.get_full_user_context().
-
-    Returns
-    -------
-    str — HTML-formatted status string.
-    """
     user       = ctx["user"]
     prem       = ctx["is_premium"]
     prem_info  = ctx["premium_info"]
     has_sess   = ctx["has_session"]
     recent_ops = ctx["recent_ops"]
 
-    # ── Header ──────────────────────────────────────────────
     lines = [
         f"<b>⧩ {sc('Account Status')} ⧩</b>\n",
         f"👤 <b>{sc('User')}:</b> {escape_html(user['full_name'])}",
@@ -100,7 +68,6 @@ def _build_status_text(ctx: dict) -> str:
         "",
     ]
 
-    # ── Premium block ────────────────────────────────────────
     if prem and prem_info:
         expires_str = prem_info["expires_at"]
         plan        = prem_info["plan"].capitalize()
@@ -116,21 +83,18 @@ def _build_status_text(ctx: dict) -> str:
             "",
         ]
 
-    # ── Session block ─────────────────────────────────────────
     sess_label = sc("active") if has_sess else sc("not configured")
     lines += [
         f"🔑 <b>{sc('Session')}:</b> {sess_label}",
         "",
     ]
 
-    # ── Usage stats ───────────────────────────────────────────
     lines += [
         f"📤 <b>{sc('Total Scrapes')}:</b> {user['total_scrapes']}",
         f"📥 <b>{sc('Total Adds')}:</b> {user['total_adds']}",
         "",
     ]
 
-    # ── Recent ops ────────────────────────────────────────────
     if recent_ops:
         lines.append(f"<b>{sc('Recent Operations')}:</b>")
         for op in recent_ops[:3]:
@@ -149,19 +113,6 @@ async def _fetch_user_dp(
     context: ContextTypes.DEFAULT_TYPE,
     user_id: int,
 ) -> Optional[bytes]:
-    """
-    Download the user's Telegram profile photo as raw bytes.
-    Returns None on any failure (no photo set, network error, etc.).
-
-    Parameters
-    ----------
-    context : ContextTypes.DEFAULT_TYPE
-    user_id : int
-
-    Returns
-    -------
-    bytes | None
-    """
     try:
         photos = await context.bot.get_user_profile_photos(
             user_id=user_id, limit=1
@@ -184,34 +135,15 @@ async def cmd_start(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
-    """
-    Handle the /start command.
-
-    Flow:
-        1. Upsert user in DB.
-        2. Fetch user DP bytes (for the banner).
-        3. Generate the Pillow banner PNG.
-        4. Send banner with has_spoiler=True.
-        5. Reply with the welcome HTML + main_menu keyboard.
-
-    Parameters
-    ----------
-    update  : Update
-    context : ContextTypes.DEFAULT_TYPE
-    """
     user     = update.effective_user
     chat     = update.effective_chat
     user_id  = user.id
     username = user.username
     name     = user.full_name
 
-    # ── Register / refresh user ───────────────────────────────
     db.upsert_user(user_id, username, name)
-
-    # ── Clear any stale state from prior sessions ─────────────
     states.clear_all(user_id)
 
-    # ── Generate banner ───────────────────────────────────────
     dp_bytes = await _fetch_user_dp(context, user_id)
     try:
         banner_path = generate_banner(dp_bytes)
@@ -219,7 +151,9 @@ async def cmd_start(
         logger.error(f"[START] Banner generation failed: {exc}")
         banner_path = None
 
-    # ── Send banner ───────────────────────────────────────────
+    welcome_text = _build_welcome(user_id, name)
+
+    # FIX: Image and text merged into one message (caption)
     if banner_path:
         try:
             with open(banner_path, "rb") as f:
@@ -227,19 +161,16 @@ async def cmd_start(
                     chat_id=chat.id,
                     photo=InputFile(f, filename="velyn_nox.png"),
                     has_spoiler=True,
+                    caption=welcome_text,
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=main_menu(),
                 )
         except Exception as exc:
             logger.warning(f"[START] Could not send banner: {exc}")
+            await update.message.reply_html(welcome_text, reply_markup=main_menu(), disable_web_page_preview=True)
+    else:
+        await update.message.reply_html(welcome_text, reply_markup=main_menu(), disable_web_page_preview=True)
 
-    # ── Send welcome message ──────────────────────────────────
-    welcome_text = _build_welcome(user_id, name)
-    is_owner     = (user_id == config.OWNER_ID)
-
-    await update.message.reply_html(
-        welcome_text,
-        reply_markup=main_menu(),
-        disable_web_page_preview=True,
-    )
     logger.info(f"[START] user={user_id} ({name}) started the bot.")
 
 
@@ -249,15 +180,6 @@ async def cmd_myplan(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
-    """
-    Handle the /myplan command.
-    Shows the user's current premium plan status with expiry info.
-
-    Parameters
-    ----------
-    update  : Update
-    context : ContextTypes.DEFAULT_TYPE
-    """
     user_id = update.effective_user.id
     ctx     = db.get_full_user_context(user_id)
     text    = _build_status_text(ctx)
@@ -275,15 +197,6 @@ async def cmd_status(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
-    """
-    Handle the /status command.
-    Mirrors /myplan — shows full account status.
-
-    Parameters
-    ----------
-    update  : Update
-    context : ContextTypes.DEFAULT_TYPE
-    """
     await cmd_myplan(update, context)
 
 
@@ -293,10 +206,6 @@ async def cb_menu_back(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
-    """
-    Handle callback_data='menu:back'.
-    Returns the user to the main menu message.
-    """
     query   = update.callback_query
     user_id = query.from_user.id
     name    = query.from_user.full_name
@@ -305,22 +214,26 @@ async def cb_menu_back(
     states.clear_all(user_id)
 
     welcome_text = _build_welcome(user_id, name)
-    await query.edit_message_text(
-        welcome_text,
-        parse_mode=ParseMode.HTML,
-        reply_markup=main_menu(),
-        disable_web_page_preview=True,
-    )
+    
+    try:
+        await query.message.edit_caption(
+            caption=welcome_text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=main_menu(),
+        )
+    except Exception:
+        await query.message.edit_text(
+            welcome_text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=main_menu(),
+            disable_web_page_preview=True,
+        )
 
 
 async def cb_menu_scrape(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
-    """
-    Handle callback_data='menu:scrape'.
-    Route to the scrape sub-menu or prompt session setup if none exists.
-    """
     query   = update.callback_query
     user_id = query.from_user.id
     await query.answer()
@@ -359,10 +272,6 @@ async def cb_menu_add(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
-    """
-    Handle callback_data='menu:add'.
-    Route to the add-members sub-menu or prompt session setup.
-    """
     query   = update.callback_query
     user_id = query.from_user.id
     await query.answer()
@@ -401,10 +310,6 @@ async def cb_menu_premium(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
-    """
-    Handle callback_data='menu:premium'.
-    Show the premium info/upgrade menu.
-    """
     query   = update.callback_query
     user_id = query.from_user.id
     is_prem = db.is_premium(user_id)
@@ -444,10 +349,6 @@ async def cb_premium_myplan(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
-    """
-    Handle callback_data='premium:myplan'.
-    Show plan details inline.
-    """
     query   = update.callback_query
     user_id = query.from_user.id
     await query.answer()
@@ -467,10 +368,6 @@ async def cb_status_refresh(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
-    """
-    Handle callback_data='status:refresh'.
-    Re-builds and re-sends the status block.
-    """
     query   = update.callback_query
     user_id = query.from_user.id
     await query.answer(sc("refreshed"), show_alert=False)
@@ -489,10 +386,6 @@ async def cb_op_cancel(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
-    """
-    Handle callback_data='op:cancel'.
-    Set the cancel flag so the engine loop stops after the current iteration.
-    """
     query   = update.callback_query
     user_id = query.from_user.id
     await query.answer(sc("cancelling..."), show_alert=False)
@@ -507,19 +400,10 @@ async def cb_op_cancel(
 # ── Handler Registration ──────────────────────────────────────
 
 def register(app: Application) -> None:
-    """
-    Attach all start.py handlers to the Application instance.
-
-    Parameters
-    ----------
-    app : Application — The running PTB Application.
-    """
-    # Commands
     app.add_handler(CommandHandler("start",  cmd_start))
     app.add_handler(CommandHandler("myplan", cmd_myplan))
     app.add_handler(CommandHandler("status", cmd_status))
 
-    # Callback queries
     app.add_handler(CallbackQueryHandler(cb_menu_back,       pattern="^menu:back$"))
     app.add_handler(CallbackQueryHandler(cb_menu_scrape,     pattern="^menu:scrape$"))
     app.add_handler(CallbackQueryHandler(cb_menu_add,        pattern="^menu:add$"))
