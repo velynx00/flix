@@ -4,7 +4,6 @@ from telegram.constants import ParseMode
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes
 
 import config
-from database.db import db
 from keyboards.menus import admin_panel
 from utils.text import sc
 
