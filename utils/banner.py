@@ -110,3 +110,75 @@ def generate_static_banner(title: str = "SCRAPER ENGINE") -> io.BytesIO:
     img.convert("RGB").save(buf, format="PNG", optimize=True)
     buf.seek(0)
     return buf
+
+def generate_scary_dp() -> io.BytesIO:
+    W, H   = 1024, 1024
+    cx, cy = W // 2, H // 2
+    rng    = random.Random()
+
+    img  = Image.new("RGB", (W, H), (0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    hex_r = 38
+    for row in range(-1, int(H / (hex_r * math.sqrt(3))) + 3):
+        for col in range(-1, int(W / (hex_r * 1.5)) + 3):
+            hx = col * hex_r * 1.5
+            hy = row * hex_r * math.sqrt(3) + (col % 2) * hex_r * math.sqrt(3) / 2
+            pts = [(hx + hex_r * math.cos(math.radians(60 * i - 30)), hy + hex_r * math.sin(math.radians(60 * i - 30))) for i in range(6)]
+            draw.polygon(pts, outline=(15, 0, 0), fill=None)
+
+    for _ in range(350):
+        sx, sy = rng.randint(0, W), rng.randint(0, H)
+        draw.rectangle([sx, sy, sx+rng.randint(1, 8), sy+rng.randint(1, 4)], fill=(rng.randint(40, 120), 0, 0))
+
+    glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    gd   = ImageDraw.Draw(glow)
+    gd.ellipse([cx-350, cy-280, cx+350, cy+280], fill=(120,  0,  0, 110))
+    gd.ellipse([cx-160, cy-130, cx+160, cy+130], fill=(180, 0,  0, 150))
+    glow = glow.filter(ImageFilter.GaussianBlur(100))
+    img  = Image.alpha_composite(img.convert("RGBA"), glow).convert("RGB")
+    draw = ImageDraw.Draw(img)
+
+    def crack_branch(d, ox, oy, angle, depth):
+        if depth == 0: return
+        length = rng.randint(30, 90) * (depth / 5)
+        ex, ey = ox + length * math.cos(math.radians(angle)), oy + length * math.sin(math.radians(angle))
+        d.line([(ox, oy), (ex, ey)], fill=(max(20, int(60 * depth / 5))*2, 0, 0), width=max(1, depth-1))
+        if rng.random() < 0.4: crack_branch(d, ex, ey, angle + rng.randint(20, 60), depth-1)
+        if rng.random() < 0.4: crack_branch(d, ex, ey, angle - rng.randint(20, 60), depth-1)
+        crack_branch(d, ex, ey, angle + rng.randint(-15, 15), depth-1)
+
+    for _ in range(28): crack_branch(draw, cx, cy, rng.randint(0, 360), 5)
+
+    ew, eh = 480, 230
+    draw.ellipse([cx-ew//2, cy-eh//2, cx+ew//2, cy+eh//2], fill=(0, 0, 0), outline=(150, 0, 0), width=10)
+
+    for rw, rh, col, lw in [(360, 160, (180, 0, 0), 5), (280, 120, (200, 0, 0), 3), (200, 85, (150, 0, 0), 2), (130, 55, (220, 0, 0), 4)]:
+        draw.ellipse([cx-rw//2, cy-rh//2, cx+rw//2, cy+rh//2], outline=col, width=lw)
+
+    ph, pw = 180, 52
+    draw.polygon([(cx, cy-ph//2), (cx+pw, cy), (cx, cy+ph//2), (cx-pw, cy)], fill=(200, 0, 0))
+    draw.polygon([(cx, cy-(ph-40)//2), (cx+pw//2, cy), (cx, cy+(ph-40)//2), (cx-pw//2, cy)], fill=(255, 50, 50))
+    draw.ellipse([cx-22, cy-22, cx+22, cy+22], fill=(200, 100, 100))
+
+    dy_start = cy + eh // 2
+    for _ in range(28):
+        x = rng.randint(cx - ew//2 + 30, cx + ew//2 - 30)
+        length, width = rng.randint(40, 320), rng.randint(2, 8)
+        draw.line([(x, dy_start), (x, dy_start + length)], fill=(120, 0, 0), width=width)
+        draw.ellipse([x-width-2, dy_start+length-width-2, x+width+2, dy_start+length+width*2], fill=(80, 0, 0))
+
+    scan = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    scd  = ImageDraw.Draw(scan)
+    for y in range(0, H, rng.randint(3, 6)): scd.line([(0, y), (W, y)], fill=(0, 0, 0, 55), width=1)
+    img  = Image.alpha_composite(img.convert("RGBA"), scan).convert("RGB")
+
+    bloom = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    bd    = ImageDraw.Draw(bloom)
+    bd.ellipse([cx-300, cy-200, cx+300, cy+200], fill=(150, 0, 0, 45))
+    img   = Image.alpha_composite(img.convert("RGBA"), bloom.filter(ImageFilter.GaussianBlur(80))).convert("RGB")
+
+    buf = io.BytesIO()
+    img.convert("RGB").save(buf, format="JPEG", quality=97)
+    buf.seek(0)
+    return buf
