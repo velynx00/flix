@@ -3,7 +3,7 @@ from telegram.constants import ParseMode
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes
 import config
 from keyboards.menus import admin_panel
-from utils.text import sc
+from utils.text import sc, esc
 from handlers.start import safe_edit
 
 async def cmd_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -38,16 +38,14 @@ async def cmd_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         target_id = int(context.args[0])
         
-        # Naam nikalne ki koshish karo, agar na mile toh "Unknown User" use karo
         try:
             user = await context.bot.get_chat(target_id)
-            name = user.full_name
+            name = esc(user.full_name) # Escape HTML characters
             username = f"@{user.username}" if user.username else "No Username"
         except Exception:
             name = "Click to View Profile"
             username = "Hidden/Unknown"
         
-        # Ye link bina username ke bhi profile khol dega
         mention = f'<a href="tg://user?id={target_id}">{name}</a>'
         
         text = (
@@ -62,7 +60,7 @@ async def cmd_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_html(text)
         
     except Exception as e:
-        await update.message.reply_text(f"❌ Error: Invalid ID format.")
+        await update.message.reply_text(f"❌ Error: {str(e)}")
 
 def register(app: Application) -> None:
     app.add_handler(CommandHandler("admin", cmd_admin))

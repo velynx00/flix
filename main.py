@@ -22,7 +22,6 @@ def run_flask():
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger = logging.getLogger(__name__)
     logger.error(msg="Exception while handling an update:", exc_info=context.error)
-    # Agar update message hai, toh user ko error batao
     if update and update.effective_message:
         try:
             await update.effective_message.reply_text(f"❌ Internal Error: {context.error}")
@@ -32,7 +31,8 @@ def main():
     threading.Thread(target=run_flask, daemon=True).start()
     db.init_db()
 
-    request = HTTPXRequest(connect_timeout=30.0, read_timeout=30.0)
+    # Timeout badha diya taaki Render pe network drop na ho
+    request = HTTPXRequest(connect_timeout=60.0, read_timeout=60.0)
     application = Application.builder().token(config.BOT_TOKEN).request(request).build()
 
     scraper.register(application)
@@ -44,7 +44,8 @@ def main():
 
     application.add_error_handler(error_handler)
     logging.info("Enterprise Bot is Live!")
-    application.run_polling(drop_pending_updates=True)
+    # Drop pending updates hataya taaki purane messages process ho sakein
+    application.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=False)
 
 if __name__ == "__main__":
     main()
