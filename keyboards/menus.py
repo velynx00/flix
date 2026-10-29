@@ -113,3 +113,7 @@ def otp_resend_menu() -> InlineKeyboardMarkup:
             InlineKeyboardButton(f"↩ {LABEL_CANCEL}", callback_data="otp:cancel", style="danger"),
         ],
     ])
+def back_btn() -> InlineKeyboardMarkup:
+    return _kb([
+        [InlineKeyboardButton(f"↩ {LABEL_BACK}", callback_data="menu:back", style="danger")]
+    ])
