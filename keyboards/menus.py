@@ -15,16 +15,15 @@ def _kb(rows: list[list[InlineKeyboardButton]]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(rows)
 
 def main_menu() -> InlineKeyboardMarkup:
+    # FIX: 2x2 Grid layout with Advanced Catchy Text
     return _kb([
         [
-            InlineKeyboardButton(f"⟢ {sc('ꜱᴄʀᴀᴘᴇ')}", callback_data="menu:scrape", style="primary"),
-            InlineKeyboardButton(f"✦ {sc('ᴀᴅᴅ')}", callback_data="menu:add", style="success"),
+            InlineKeyboardButton(f"⚡ {sc('ꜱᴄʀᴀᴘᴇ')}", callback_data="menu:scrape", style="primary"),
+            InlineKeyboardButton(f"🔥 {sc('ᴀᴅᴅ')}", callback_data="menu:add", style="success"),
         ],
         [
-            InlineKeyboardButton(f"★ {sc('ᴘʀᴇᴍɪᴜᴍ')}", callback_data="menu:premium", style="primary"),
-        ],
-        [
-            InlineKeyboardButton(f"⚡ {sc('ᴜᴘᴅᴀᴛᴇꜱ')}", url=config.UPDATE_CHANNEL_URL, style="danger"),
+            InlineKeyboardButton(f"💎 {sc('ᴘʀᴇᴍɪᴜᴍ')}", callback_data="menu:premium", style="primary"),
+            InlineKeyboardButton(f"📢 {sc('ᴜᴘᴅᴀᴛᴇꜱ')}", url=config.UPDATE_CHANNEL_URL, style="danger"),
         ],
     ])
 
