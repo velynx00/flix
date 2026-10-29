@@ -18,21 +18,20 @@ from handlers import states
 logger = logging.getLogger(__name__)
 
 def _build_welcome(user_id: int, user_name: str) -> str:
-    # ADVANCED HACKER DASHBOARD TEXT
+    # EXACT MATCH OF SONIC NOX STYLE (Tailored for Velyn)
     return (
-        f"<b>⧩ {sc('ᴠᴇʟʏɴ ɴᴏx ᴘʀᴇᴍɪᴜᴍ')} ⧩</b>\n"
-        f"<i>{sc('ᴛʜᴇ ᴜʟᴛɪᴍᴀᴛᴇ ᴛᴇʟᴇɢʀᴀᴍ ꜱᴄʀᴀᴘᴇʀ & ᴀᴅᴅᴇʀ')}</i>\n\n"
-        f"🔥 <b>{sc('ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ᴛʜᴇ ᴇʟɪᴛᴇ ɴᴇᴛᴡᴏʀᴋ')}, "
-        f"<a href='tg://user?id={user_id}'>{escape_html(user_name)}</a>!</b>\n\n"
-        f"<blockquote><b>{sc('ꜱʏꜱᴛᴇᴍ ꜱᴛᴀᴛᴜꜱ')}</b>\n"
-        f"├ ☠ <b>{sc('ᴜꜱᴇʀ ꜱᴛᴀᴛᴜꜱ')}</b> : <code>{sc('ᴀᴄᴛɪᴠᴇ')}</code>\n"
-        f"├ ⚡ <b>{sc('ɴᴇᴛᴡᴏʀᴋ')}</b> : <code>{sc('ᴇɴᴄʀʏᴘᴛᴇᴅ')}</code>\n"
-        f"└ 🛡 <b>{sc('ᴘʀᴏᴛᴏᴄᴏʟ')}</b> : <code>{sc('ʙʏᴘᴀꜱꜱ ᴀᴄᴛɪᴠᴇ')}</code></blockquote>\n\n"
-        f"<blockquote><b>{sc('ᴀᴠᴀɪʟᴀʙʟᴇ ᴛᴏᴏʟꜱ')}</b>\n"
-        f"▸ <b>{sc('ꜱᴄʀᴀᴘᴇ')}</b> : {sc('ᴇxᴛʀᴀᴄᴛꜱ ᴍᴇᴍʙᴇʀꜱ ꜰʀᴏᴍ ᴀ ɢʀᴏᴜᴘ')}\n"
-        f"▸ <b>{sc('ᴀᴅᴅ')}</b> : {sc('ɪɴᴊᴇᴄᴛꜱ ᴍᴇᴍʙᴇʀꜱ ɪɴᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ')}\n"
-        f"▸ <b>{sc('ᴘʀᴇᴍɪᴜᴍ')}</b> : {sc('ᴜɴʟᴏᴄᴋꜱ ᴜɴʟɪᴍɪᴛᴇᴅ ᴜꜱᴇ')}</blockquote>\n\n"
-        f"<b>{sc('ꜱᴇʟᴇᴄᴛ ᴀɴ ᴏᴘᴛɪᴏɴ ʙᴇʟᴏᴡ ᴛᴏ ʙᴇɢɪɴ.')} 👇</b>"
+        f"<blockquote>🕷️ <b>{sc('ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ᴠᴇʟʏɴ ɴᴏx')}</b></blockquote>\n"
+        f"<b>★ ───────────────────── ★</b>\n"
+        f"👋 Hey <a href='tg://user?id={user_id}'>{escape_html(user_name)}</a>!\n"
+        f"⚡ <b>{sc('ᴛʜᴇ ᴜʟᴛɪᴍᴀᴛᴇ ᴛᴇʟᴇɢʀᴀᴍ ꜱᴄʀᴀᴘᴇʀ & ᴀᴅᴅᴇʀ')}</b>\n"
+        f"<b>★ ───────────────────── ★</b>\n"
+        f"1️⃣ <b>{sc('ᴀᴅᴅ ᴀᴘɪ')}</b> : <code>/admin</code> {sc('(ᴏᴡɴᴇʀ ᴏɴʟʏ)')}\n"
+        f"2️⃣ <b>{sc('ꜱᴄʀᴀᴘᴇ ᴍᴇᴍʙᴇʀꜱ')}</b> : {sc('ᴇxᴛʀᴀᴄᴛ ꜰʀᴏᴍ ɢʀᴏᴜᴘ')}\n"
+        f"3️⃣ <b>{sc('ᴀᴅᴅ ᴍᴇᴍʙᴇʀꜱ')}</b> : {sc('ɪɴᴊᴇᴄᴛ ɪɴᴛᴏ ɢʀᴏᴜᴘ')}\n"
+        f"4️⃣ <b>{sc('ᴄʜᴇᴄᴋ ꜱᴛᴀᴛᴜꜱ')}</b> : <code>/myplan</code>\n"
+        f"<b>★ ───────────────────── ★</b>\n"
+        f"🛡 <b>{sc('ꜱᴇᴄᴜʀᴇ & ᴇɴᴄʀʏᴘᴛᴇᴅ')}</b>\n"
+        f"🚀 <i>{sc('ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴠᴇʟʏɴ ɴᴏx')}</i>"
     )
 
 def _build_status_text(ctx: dict) -> str:
