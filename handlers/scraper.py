@@ -13,31 +13,19 @@ def is_premium_or_owner(user_id):
 async def cb_menu_scrape(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     q = update.callback_query
     await q.answer()
-    
     if not is_premium_or_owner(q.from_user.id):
         return await q.answer("⚠️ Premium Required! Contact @Velynx007.", show_alert=True)
 
-    text = (
-        f"<b>⟢ {sc('ꜱᴄʀᴀᴘᴇʀ ᴇɴɢɪɴᴇ')} ⟢</b>\n\n"
-        f"{sc('ᴇxᴛʀᴀᴄᴛ ᴍᴇᴍʙᴇʀꜱ ꜰʀᴏᴍ ᴀɴʏ ᴛᴇʟᴇɢʀᴀᴍ ɢʀᴏᴜᴘ.')}\n\n"
-        f"<b>{sc('ʟɪᴍɪᴛ')}:</b> 50 {sc('ᴍᴇᴍʙᴇʀꜱ.')}\n"
-        f"<b>{sc('ᴘʀᴇꜱꜱ ꜱᴛᴀʀᴛ ꜱᴄʀᴀᴘᴇ.')}</b>"
-    )
+    text = f"<b>⟢ {sc('ꜱᴄʀᴀᴘᴇʀ ᴇɴɢɪɴᴇ')} ⟢</b>\n\n{sc('ᴇxᴛʀᴀᴄᴛ ᴍᴇᴍʙᴇʀꜱ ꜰʀᴏᴍ ᴀɴʏ ᴛᴇʟᴇɢʀᴀᴍ ɢʀᴏᴜᴘ.')}"
     await safe_edit_media(q, text, "SCRAPER ENGINE", scrape_menu(), use_static=True)
 
 async def cb_menu_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     q = update.callback_query
     await q.answer()
-    
     if not is_premium_or_owner(q.from_user.id):
         return await q.answer("⚠️ Premium Required! Contact @Velynx007.", show_alert=True)
 
-    text = (
-        f"<b>✦ {sc('ᴀᴅᴅᴇʀ ᴇɴɢɪɴᴇ')} ✦</b>\n\n"
-        f"{sc('ɪɴᴊᴇᴄᴛ ᴍᴇᴍʙᴇʀꜱ ɪɴᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ.')}\n\n"
-        f"<b>{sc('ʟɪᴍɪᴛ')}:</b> 50 {sc('ᴍᴇᴍʙᴇʀꜱ.')}\n"
-        f"<b>{sc('ᴘʀᴇꜱꜱ ꜱᴛᴀʀᴛ ᴀᴅᴅɪɴɢ.')}</b>"
-    )
+    text = f"<b>✦ {sc('ᴀᴅᴅᴇʀ ᴇɴɢɪɴᴇ')} ✦</b>\n\n{sc('ɪɴᴊᴇᴄᴛ ᴍᴇᴍʙᴇʀꜱ ɪɴᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ.')}"
     await safe_edit_media(q, text, "ADDER ENGINE", add_menu(), use_static=True)
 
 async def cb_scrape_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -62,8 +50,20 @@ async def cb_add_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     text = f"<b>{sc('ꜱᴛᴀʀᴛ ᴀᴅᴅ')}</b>\n\n<b>{sc('ꜱᴇɴᴅ ᴛʜᴇ ꜱᴏᴜʀᴄᴇ ɢʀᴏᴜᴘ ʟɪɴᴋ')}:</b>"
     await safe_edit(q, text, back_btn())
 
+async def cb_add_csv(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    q = update.callback_query
+    await q.answer()
+    if not is_premium_or_owner(q.from_user.id):
+        return await q.answer("⚠️ Premium Required!", show_alert=True)
+        
+    context.user_data['action'] = 'add_csv'
+    context.user_data['waiting_for'] = 'csv_file'
+    text = f"<b>📁 {sc('ᴜᴘʟᴏᴀᴅ ᴄꜱᴠ')}</b>\n\n<b>{sc('ꜱᴇɴᴅ ʏᴏᴜʀ ꜱᴄʀᴀᴘᴇᴅ .ᴄꜱᴠ ꜰɪʟᴇ')}:</b>"
+    await safe_edit(q, text, back_btn())
+
 def register(app: Application) -> None:
     app.add_handler(CallbackQueryHandler(cb_menu_scrape, pattern="^menu:scrape$"))
     app.add_handler(CallbackQueryHandler(cb_menu_add, pattern="^menu:add$"))
     app.add_handler(CallbackQueryHandler(cb_scrape_start, pattern="^scrape:start$"))
     app.add_handler(CallbackQueryHandler(cb_add_start, pattern="^add:start$"))
+    app.add_handler(CallbackQueryHandler(cb_add_csv, pattern="^add:csv$"))

@@ -38,6 +38,7 @@ def scrape_menu() -> InlineKeyboardMarkup:
 def add_menu() -> InlineKeyboardMarkup:
     return _kb([
         [InlineKeyboardButton(f"✦ {sc('ꜱᴛᴀʀᴛ ᴀᴅᴅɪɴɢ')}", callback_data="add:start", style="success")],
+        [InlineKeyboardButton(f"📁 {sc('ᴜᴘʟᴏᴀᴅ ᴄꜱᴠ')}", callback_data="add:csv", style="primary")], # NAYA BUTTON
         [InlineKeyboardButton(f"↩ {sc('ʙᴀᴄᴋ')}", callback_data="menu:back", style="danger")],
     ])
 
@@ -54,7 +55,7 @@ def admin_panel() -> InlineKeyboardMarkup:
             InlineKeyboardButton(f"🔑 {sc('ᴀᴅᴅ ꜱᴇꜱꜱɪᴏɴ')}", callback_data="admin:addapi", style="success"),
             InlineKeyboardButton(f"🗑 {sc('ʀᴇᴠᴏᴋᴇ')}", callback_data="admin:revoke", style="danger"),
         ],
-        [InlineKeyboardButton(f"📦 {sc('ʙᴜʟᴋ ꜱᴇꜱꜱɪᴏɴꜱ')}", callback_data="admin:bulk", style="primary")], # NAYA BUTTON
+        [InlineKeyboardButton(f"📦 {sc('ʙᴜʟᴋ ꜱᴇꜱꜱɪᴏɴꜱ')}", callback_data="admin:bulk", style="primary")],
         [InlineKeyboardButton(f"😈 {sc('ɢᴇɴᴇʀᴀᴛᴇ ᴅᴀʀᴋ ᴅᴘ')}", callback_data="admin:dp", style="danger")],
         [InlineKeyboardButton(f"↩ {sc('ʙᴀᴄᴋ')}", callback_data="menu:back", style="danger")],
     ])
