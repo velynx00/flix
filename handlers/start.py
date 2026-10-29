@@ -17,6 +17,17 @@ from handlers import states
 
 logger = logging.getLogger(__name__)
 
+# FIX: Smart Edit Function (Photo ya Text dono handle karega)
+async def safe_edit(query, text, reply_markup=None):
+    try:
+        if query.message.photo or query.message.document:
+            await query.edit_message_caption(caption=text, parse_mode=ParseMode.HTML, reply_markup=reply_markup)
+        else:
+            await query.edit_message_text(text=text, parse_mode=ParseMode.HTML, reply_markup=reply_markup, disable_web_page_preview=True)
+    except Exception as e:
+        if "Message is not modified" not in str(e):
+            logger.warning(f"Edit error: {e}")
+
 def _build_welcome(user_id: int, user_name: str) -> str:
     return (
         f"<blockquote>🕷️ <b>{sc('ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ᴠᴇʟʏɴ ɴᴏx')}</b></blockquote>\n"
@@ -138,8 +149,6 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     else:
         await update.message.reply_html(welcome_text, reply_markup=main_menu(), disable_web_page_preview=True)
 
-    logger.info(f"[START] user={user_id} ({name}) started the bot.")
-
 
 async def cmd_myplan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
@@ -160,12 +169,7 @@ async def cb_menu_back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
     await query.answer()
     states.clear_all(user_id)
-
-    welcome_text = _build_welcome(user_id, name)
-    try:
-        await query.message.edit_caption(caption=welcome_text, parse_mode=ParseMode.HTML, reply_markup=main_menu())
-    except Exception:
-        await query.message.edit_text(welcome_text, parse_mode=ParseMode.HTML, reply_markup=main_menu(), disable_web_page_preview=True)
+    await safe_edit(query, _build_welcome(user_id, name), main_menu())
 
 
 async def cb_menu_scrape(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -181,7 +185,7 @@ async def cb_menu_scrape(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             f"{sc('before you can scrape members.')}\n\n"
             f"<b>{sc('Setup your session now:')}</b>"
         )
-        await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=session_menu(has_session=False))
+        await safe_edit(query, text, session_menu(has_session=False))
         return
 
     text = (
@@ -191,7 +195,7 @@ async def cb_menu_scrape(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         f"▸ <b>{sc('Premium')}</b>: {sc('unlimited')}\n\n"
         f"<b>{sc('Tap Start Scrape and send the group link.')}</b>"
     )
-    await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=scrape_menu())
+    await safe_edit(query, text, scrape_menu())
 
 
 async def cb_menu_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -206,7 +210,7 @@ async def cb_menu_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             f"{sc('You need a connected session to add members.')}\n\n"
             f"<b>{sc('Setup your session now:')}</b>"
         )
-        await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=session_menu(has_session=False))
+        await safe_edit(query, text, session_menu(has_session=False))
         return
 
     text = (
@@ -217,10 +221,9 @@ async def cb_menu_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         f"▸ <b>{sc('Delay')}</b>: {config.ADD_DELAY_SECONDS}s {sc('per member')}\n\n"
         f"<b>{sc('Tap Start Adding to proceed.')}</b>"
     )
-    await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=add_menu())
+    await safe_edit(query, text, add_menu())
 
 
-# FIX: Added handler for scrape:start button
 async def cb_scrape_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await query.answer()
@@ -230,9 +233,9 @@ async def cb_scrape_start(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         f"<b>{sc('ᴇxᴛʀᴀᴄᴛɪᴏɴ ᴘʀᴏᴛᴏᴄᴏʟ')}</b>\n\n"
         f"<b>{sc('ᴘʟᴇᴀꜱᴇ ꜱᴇɴᴅ ᴛʜᴇ ᴛᴀʀɢᴇᴛ ɢʀᴏᴜᴘ ʟɪɴᴋ ᴏʀ ᴜꜱᴇʀɴᴀᴍᴇ ʙᴇʟᴏᴡ.')}</b>"
     )
-    await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=back_btn())
+    await safe_edit(query, text, back_btn())
 
-# FIX: Added handler for add:start button
+
 async def cb_add_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await query.answer()
@@ -242,7 +245,7 @@ async def cb_add_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         f"<b>{sc('ɪɴᴊᴇᴄᴛɪᴏɴ ᴘʀᴏᴛᴏᴄᴏʟ')}</b>\n\n"
         f"<b>{sc('ᴘʟᴇᴀꜱᴇ ꜱᴇɴᴅ ᴛʜᴇ ᴛᴀʀɢᴇᴛ ɢʀᴏᴜᴘ ʟɪɴᴋ ᴏʀ ᴜꜱᴇʀɴᴀᴍᴇ ʙᴇʟᴏᴡ.')}</b>"
     )
-    await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=back_btn())
+    await safe_edit(query, text, back_btn())
 
 
 async def cb_menu_premium(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -272,8 +275,7 @@ async def cb_menu_premium(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             f"<b>{sc('Contact the owner to purchase:')}</b> "
             f"<a href='tg://user?id={config.OWNER_ID}'>{sc('Owner')}</a>"
         )
-
-    await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=premium_menu(is_owner=is_owner), disable_web_page_preview=True)
+    await safe_edit(query, text, premium_menu(is_owner=is_owner))
 
 
 async def cb_premium_myplan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -283,8 +285,7 @@ async def cb_premium_myplan(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
     ctx  = db.get_full_user_context(user_id)
     text = _build_status_text(ctx)
-
-    await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=status_menu(), disable_web_page_preview=True)
+    await safe_edit(query, text, status_menu())
 
 
 async def cb_status_refresh(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -294,8 +295,7 @@ async def cb_status_refresh(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
     ctx  = db.get_full_user_context(user_id)
     text = _build_status_text(ctx)
-
-    await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=status_menu())
+    await safe_edit(query, text, status_menu())
 
 
 async def cb_op_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -303,11 +303,11 @@ async def cb_op_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     user_id = query.from_user.id
     await query.answer(sc("cancelling..."), show_alert=False)
     states.request_cancel(user_id)
-    await query.edit_message_text(
+    text = (
         f"⛔ <b>{sc('Operation cancellation requested.')}</b>\n"
-        f"{sc('It will stop after the current step.')}",
-        parse_mode=ParseMode.HTML,
+        f"{sc('It will stop after the current step.')}"
     )
+    await safe_edit(query, text)
 
 
 def register(app: Application) -> None:
@@ -318,8 +318,8 @@ def register(app: Application) -> None:
     app.add_handler(CallbackQueryHandler(cb_menu_back,       pattern="^menu:back$"))
     app.add_handler(CallbackQueryHandler(cb_menu_scrape,     pattern="^menu:scrape$"))
     app.add_handler(CallbackQueryHandler(cb_menu_add,        pattern="^menu:add$"))
-    app.add_handler(CallbackQueryHandler(cb_scrape_start,    pattern="^scrape:start$")) # <-- FIXED
-    app.add_handler(CallbackQueryHandler(cb_add_start,       pattern="^add:start$"))    # <-- FIXED
+    app.add_handler(CallbackQueryHandler(cb_scrape_start,    pattern="^scrape:start$"))
+    app.add_handler(CallbackQueryHandler(cb_add_start,       pattern="^add:start$"))
     app.add_handler(CallbackQueryHandler(cb_menu_premium,    pattern="^menu:premium$"))
     app.add_handler(CallbackQueryHandler(cb_premium_myplan,  pattern="^premium:myplan$"))
     app.add_handler(CallbackQueryHandler(cb_status_refresh,  pattern="^status:refresh$"))
