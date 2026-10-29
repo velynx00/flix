@@ -1,5 +1,4 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 import config
 from utils.text import sc, LABEL_CANCEL, LABEL_BACK, LABEL_YES, LABEL_NO, LABEL_EXPORT, LABEL_MYPLAN, LABEL_GRANT, LABEL_REVOKE_P, LABEL_STATS, LABEL_BCAST, LABEL_ADMIN, LABEL_REVOKE
 
@@ -50,10 +49,13 @@ def admin_panel() -> InlineKeyboardMarkup:
     return _kb([
         [InlineKeyboardButton(f"📊 {LABEL_STATS}", callback_data="admin:stats", style="primary")],
         [
+            InlineKeyboardButton(f"🔑 {sc('ᴀᴅᴅ ꜱᴇꜱꜱɪᴏɴ')}", callback_data="admin:addapi", style="success"),  # <-- NAYA BUTTON
+            InlineKeyboardButton(f"🗑 {LABEL_REVOKE}", callback_data="admin:revoke_session", style="danger"),
+        ],
+        [
             InlineKeyboardButton(f"✅ {LABEL_GRANT}", callback_data="admin:grant", style="success"),
             InlineKeyboardButton(f"❌ {LABEL_REVOKE_P}", callback_data="admin:revoke_premium", style="danger"),
         ],
-        [InlineKeyboardButton(f"🔑 {LABEL_REVOKE}", callback_data="admin:revoke_session", style="danger")],
         [InlineKeyboardButton(f"📢 {LABEL_BCAST}", callback_data="admin:broadcast", style="primary")],
         [InlineKeyboardButton(f"↩ {LABEL_BACK}", callback_data="menu:back", style="danger")],
     ])
