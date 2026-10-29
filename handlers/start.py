@@ -26,7 +26,7 @@ async def _send_new_banner(q, text, title, reply_markup):
             dp_bytes = buf.getvalue()
     except: pass
     
-    banner = await generate_banner(dp_bytes, title=title)
+    banner = generate_banner(dp_bytes, title=title)
     await q.get_bot().send_photo(
         chat_id=q.message.chat_id,
         photo=InputFile(banner, filename="menu_banner.png"),
@@ -48,7 +48,7 @@ async def safe_edit(query, text, reply_markup=None):
 
 def _build_welcome(user_id: int, user_name: str) -> str:
     return (
-        f"<blockquote>🕷️ <b>{sc('ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ᴠᴇʟʏɴ ɴᴏx')}</b></blockquote>\n"
+        f"<blockquote>🕷️ <b>{sc('ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ɴᴏx ꜱʏɴᴅɪᴄᴀᴛᴇ')}</b></blockquote>\n"
         f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
         f"👋 <b>Hey</b> <a href='tg://user?id={user_id}'><b>{escape_html(user_name)}</b></a><b>!</b>\n"
         f"⚡ <b>{sc('ᴛʜᴇ ᴜʟᴛɪᴍᴀᴛᴇ ᴛᴇʟᴇɢʀᴀᴍ ꜱᴄʀᴀᴘᴇʀ')}</b>\n"
@@ -58,7 +58,7 @@ def _build_welcome(user_id: int, user_name: str) -> str:
         f"<b>3️⃣ {sc('ᴄʜᴇᴄᴋ ꜱᴛᴀᴛᴜꜱ')} : <code>/myplan</code></b>\n"
         f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
         f"🛡 <b>{sc('ꜱᴇᴄᴜʀᴇ & ᴇɴᴄʀʏᴘᴛᴇᴅ')}</b>\n"
-        f"🚀 <b>{sc('ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴠᴇʟʏɴ ɴᴏx')}</b>"
+        f"🚀 <b>{sc('ᴘᴏᴡᴇʀᴇᴅ ʙʏ ɴᴏx ꜱʏɴᴅɪᴄᴀᴛᴇ')}</b>"
     )
 
 async def _fetch_user_dp(context: ContextTypes.DEFAULT_TYPE, user_id: int) -> Optional[bytes]:
@@ -80,9 +80,9 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     dp_bytes = await _fetch_user_dp(context, user.id)
     welcome_text = _build_welcome(user.id, user.full_name)
 
-    # FIX: Added await here and handled BytesIO directly
     try:
-        banner = await generate_banner(dp_bytes, title="SYSTEM OVERRIDE")
+        # FIX: Removed await here because generate_banner is now synchronous
+        banner = generate_banner(dp_bytes, title="SYSTEM OVERRIDE")
         await context.bot.send_photo(
             chat_id=update.effective_chat.id,
             photo=InputFile(banner, filename="velyn_nox.png"),
@@ -110,7 +110,7 @@ async def cb_menu_premium(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     is_owner = (q.from_user.id == config.OWNER_ID)
     
     text = (
-        f"<b>💎 {sc('ᴠᴇʟʏɴ ɴᴏx ᴘʀᴇᴍɪᴜᴍ')} 💎</b>\n"
+        f"<b>💎 {sc('ɴᴏx ꜱʏɴᴅɪᴄᴀᴛᴇ ᴘʀᴇᴍɪᴜᴍ')} 💎</b>\n"
         f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
         f"🔥 <b>{sc('ᴜɴʟᴏᴄᴋ ᴛʜᴇ ᴜʟᴛɪᴍᴀᴛᴇ ᴘᴏᴡᴇʀ')}</b>\n\n"
         f"<b>{sc('ᴘʀᴇᴍɪᴜᴍ ʙᴇɴᴇꜰɪᴛꜱ')}:</b>\n"
