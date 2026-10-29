@@ -1,5 +1,6 @@
-python-telegram-bot>=22.0
+python-telegram-bot==22.8
 telethon
 aiohttp
 Pillow
 Flask
+urllib3
