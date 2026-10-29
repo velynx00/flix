@@ -26,6 +26,14 @@ async def cb_admin_addapi(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     text = f"<b>{sc('ᴀᴅᴅ ꜱᴇꜱꜱɪᴏɴ')}</b>\n\n<b>{sc('ꜱᴛᴇᴘ 1/3: ᴇɴᴛᴇʀ ᴀᴘɪ ɪᴅ')}</b>"
     await safe_edit(q, text)
 
+async def cb_admin_bulk(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    q = update.callback_query
+    await q.answer()
+    if q.from_user.id != config.OWNER_ID: return
+    context.user_data['waiting_for'] = 'bulk_api_id'
+    text = f"<b>{sc('ʙᴜʟᴋ ꜱᴇꜱꜱɪᴏɴꜱ')}</b>\n\n<b>{sc('ꜱᴛᴇᴘ 1/3: ᴇɴᴛᴇʀ ᴀᴘɪ ɪᴅ')}</b>"
+    await safe_edit(q, text)
+
 async def cmd_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if update.effective_user.id != config.OWNER_ID: return
     if not context.args:
@@ -60,3 +68,4 @@ def register(app: Application) -> None:
     app.add_handler(CommandHandler("info", cmd_info))
     app.add_handler(CallbackQueryHandler(cb_admin_panel, pattern="^admin:panel$"))
     app.add_handler(CallbackQueryHandler(cb_admin_addapi, pattern="^admin:addapi$"))
+    app.add_handler(CallbackQueryHandler(cb_admin_bulk, pattern="^admin:bulk$"))

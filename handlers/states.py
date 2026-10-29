@@ -18,6 +18,7 @@ async def handle_states(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     if not waiting_for: return
     text = update.message.text
 
+    # ── NORMAL SINGLE API FLOW ──
     if waiting_for == 'api_id':
         context.user_data['api_id'] = text
         context.user_data['waiting_for'] = 'api_hash'
@@ -32,7 +33,6 @@ async def handle_states(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         client = TelegramClient(StringSession(), int(context.user_data['api_id']), context.user_data['api_hash'])
         await client.connect()
         try:
-            # Fix double + if present
             clean_phone = text.replace("++", "+")
             await client.send_code_request(clean_phone)
             context.user_data['client'] = client
@@ -52,9 +52,8 @@ async def handle_states(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             await update.message.reply_text("✅ <b>API Added Successfully!</b>", parse_mode=ParseMode.HTML)
             await client.disconnect()
         except errors.SessionPasswordNeededError:
-            # FIX: Properly catching Telethon 2FA error
             context.user_data['waiting_for'] = 'api_2fa'
-            await update.message.reply_text("🔐 <b>2FA Password Required:</b>\n\nPlease enter your Two-Step Verification password:", parse_mode=ParseMode.HTML)
+            await update.message.reply_text("🔐 <b>2FA Password Required:</b>\n\nPlease enter your password:", parse_mode=ParseMode.HTML)
         except Exception as e:
             context.user_data['waiting_for'] = None
             await update.message.reply_text(f"❌ Error: {e}")
@@ -71,6 +70,48 @@ async def handle_states(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             context.user_data['waiting_for'] = None
             await update.message.reply_text(f"❌ Error: {e}")
 
+    # ── BULK SESSION FLOW ──
+    elif waiting_for == 'bulk_api_id':
+        context.user_data['bulk_api_id'] = text
+        context.user_data['waiting_for'] = 'bulk_api_hash'
+        await update.message.reply_text(f"<b>{sc('ꜱᴛᴇᴘ 2/3: ᴇɴᴛᴇʀ ᴀᴘɪ ʜᴀꜱʜ')}:</b>", parse_mode=ParseMode.HTML)
+        
+    elif waiting_for == 'bulk_api_hash':
+        context.user_data['bulk_api_hash'] = text
+        context.user_data['waiting_for'] = 'bulk_sessions'
+        await update.message.reply_text(f"<b>{sc('ꜱᴛᴇᴘ 3/3: ᴘᴀꜱᴛᴇ ꜱᴇꜱꜱɪᴏɴꜱ')}</b>\n\nSend session strings (one per line):", parse_mode=ParseMode.HTML)
+
+    elif waiting_for == 'bulk_sessions':
+        sessions = [s.strip() for s in text.split('\n') if s.strip()]
+        context.user_data['waiting_for'] = None
+        await update.message.reply_text(f"⏳ Checking {len(sessions)} sessions... (Please wait)")
+
+        api_id = int(context.user_data['bulk_api_id'])
+        api_hash = context.user_data['bulk_api_hash']
+        
+        valid_count = 0
+        dead_count = 0
+        
+        for idx, sess_str in enumerate(sessions, 1):
+            try:
+                client = TelegramClient(StringSession(sess_str), api_id, api_hash)
+                await client.connect()
+                if await client.is_user_authorized():
+                    me = await client.get_me()
+                    db.add_api(api_id, api_hash, f"Bulk_{me.id}", sess_str)
+                    valid_count += 1
+                    await update.message.reply_text(f"✅ Valid: {me.first_name} ({me.phone})")
+                else:
+                    dead_count += 1
+                    await update.message.reply_text(f"❌ Dead/Invalid Session ({idx})")
+                await client.disconnect()
+            except Exception as e:
+                dead_count += 1
+                await update.message.reply_text(f"❌ Error ({idx}): Invalid Session")
+        
+        await update.message.reply_text(f"✅ <b>Bulk Import Complete!</b>\n\nValid: {valid_count}\nDead/Invalid: {dead_count}", parse_mode=ParseMode.HTML)
+
+    # ── SCRAPE/ADD FLOW ──
     elif waiting_for == 'target':
         context.user_data['target'] = text
         context.user_data['waiting_for'] = 'limit'

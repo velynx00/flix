@@ -16,7 +16,7 @@ def main_menu() -> InlineKeyboardMarkup:
             InlineKeyboardButton(f"❓ {sc('ʜᴇʟᴘ')}", callback_data="menu:help", style="success"),
         ],
         [
-            InlineKeyboardButton(f"🔑 {sc('ꜱᴇᴛᴜᴘ ᴀᴘɪ')}", callback_data="setup:api", style="danger"), # <-- Red kar diya
+            InlineKeyboardButton(f"🔑 {sc('ꜱᴇᴛᴜᴘ ᴀᴘɪ')}", callback_data="setup:api", style="danger"),
             InlineKeyboardButton(f"📢 {sc('ᴜᴘᴅᴀᴛᴇꜱ')}", url=config.UPDATE_CHANNEL_URL, style="danger"),
         ],
     ])
@@ -54,6 +54,7 @@ def admin_panel() -> InlineKeyboardMarkup:
             InlineKeyboardButton(f"🔑 {sc('ᴀᴅᴅ ꜱᴇꜱꜱɪᴏɴ')}", callback_data="admin:addapi", style="success"),
             InlineKeyboardButton(f"🗑 {sc('ʀᴇᴠᴏᴋᴇ')}", callback_data="admin:revoke", style="danger"),
         ],
+        [InlineKeyboardButton(f"📦 {sc('ʙᴜʟᴋ ꜱᴇꜱꜱɪᴏɴꜱ')}", callback_data="admin:bulk", style="primary")], # NAYA BUTTON
         [InlineKeyboardButton(f"😈 {sc('ɢᴇɴᴇʀᴀᴛᴇ ᴅᴀʀᴋ ᴅᴘ')}", callback_data="admin:dp", style="danger")],
         [InlineKeyboardButton(f"↩ {sc('ʙᴀᴄᴋ')}", callback_data="menu:back", style="danger")],
     ])
