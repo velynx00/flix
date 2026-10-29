@@ -18,8 +18,11 @@ async def do_scrape(bot, chat_id, api_row, target, limit, dest=None):
 
         if dest:
             dest_entity = await client.get_entity(dest)
+            skipped = 0
             async for user in client.iter_participants(entity):
                 if user.bot or user.deleted: continue
+                
+                # Only Online or Recently active
                 if not isinstance(user.status, (UserStatusOnline, UserStatusRecently)): continue
                 
                 try:
@@ -30,12 +33,21 @@ async def do_scrape(bot, chat_id, api_row, target, limit, dest=None):
                 except errors.FloodWaitError as e:
                     await bot.send_message(chat_id, f"⚠️ FloodWait: {e.seconds}s")
                     await asyncio.sleep(e.seconds)
-                except Exception: continue
+                except errors.UserPrivacyRestrictedError:
+                    skipped += 1 # Privacy blocked, chupchap skip karo
+                except errors.UserNotMutualContactError:
+                    skipped += 1 # Only contacts allowed, skip
+                except Exception:
+                    skipped += 1
+                    
                 if count >= limit: break
-            await bot.send_message(chat_id, f"✅ Task Done. Added {count} members.")
+            
+            await bot.send_message(chat_id, f"✅ Task Done. Added {count} members. (Skipped {skipped} private users).")
         else:
             async for user in client.iter_participants(entity):
                 if user.bot or user.deleted: continue
+                
+                # Only Online or Recently active
                 if not isinstance(user.status, (UserStatusOnline, UserStatusRecently)): continue
                 
                 members.append({"ID": user.id, "Name": user.first_name, "Username": user.username})
@@ -57,13 +69,14 @@ async def do_scrape(bot, chat_id, api_row, target, limit, dest=None):
     finally:
         await client.disconnect()
 
-# NAYA FUNCTION: CSV se add karna
+# CSV se add karna (Privacy restricted users ko silent skip karega)
 async def add_from_csv(bot, chat_id, api_row, user_ids, dest_link):
     client = TelegramClient(StringSession(api_row['session_string']), int(api_row['api_id']), api_row['api_hash'])
     await client.connect()
     try:
         dest_entity = await client.get_entity(dest_link)
         count = 0
+        skipped = 0
         
         for user_id in user_ids:
             try:
@@ -74,12 +87,12 @@ async def add_from_csv(bot, chat_id, api_row, user_ids, dest_link):
             except errors.FloodWaitError as e:
                 await bot.send_message(chat_id, f"⚠️ FloodWait: {e.seconds}s")
                 await asyncio.sleep(e.seconds)
-            except errors.UserPrivacyRestrictedError:
-                await bot.send_message(chat_id, f"🔒 Skipped {user_id} (Privacy)")
-            except Exception as e:
-                await bot.send_message(chat_id, f"❌ Skipped {user_id} (Error)")
+            except (errors.UserPrivacyRestrictedError, errors.UserNotMutualContactError):
+                skipped += 1 # Chupchap skip
+            except Exception:
+                skipped += 1
                 
-        await bot.send_message(chat_id, f"✅ Task Done. Added {count} members from CSV.")
+        await bot.send_message(chat_id, f"✅ Task Done. Added {count} members from CSV. (Skipped {skipped} private users).")
     except Exception as e:
         await bot.send_message(chat_id, f"❌ Error: {str(e)}")
     finally:
