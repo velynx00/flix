@@ -78,24 +78,21 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     states.clear_all(user.id)
 
     dp_bytes = await _fetch_user_dp(context, user.id)
-    try: banner_path = generate_banner(dp_bytes, title="SYSTEM OVERRIDE")
-    except: banner_path = None
-
     welcome_text = _build_welcome(user.id, user.full_name)
 
-    if banner_path:
-        try:
-            with open(banner_path, "rb") as f:
-                await context.bot.send_photo(
-                    chat_id=update.effective_chat.id,
-                    photo=InputFile(f, filename="velyn_nox.png"),
-                    has_spoiler=True,
-                    caption=welcome_text,
-                    parse_mode=ParseMode.HTML,
-                    reply_markup=main_menu(),
-                )
-        except: pass
-    else:
+    # FIX: Added await here and handled BytesIO directly
+    try:
+        banner = await generate_banner(dp_bytes, title="SYSTEM OVERRIDE")
+        await context.bot.send_photo(
+            chat_id=update.effective_chat.id,
+            photo=InputFile(banner, filename="velyn_nox.png"),
+            has_spoiler=True,
+            caption=welcome_text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=main_menu(),
+        )
+    except Exception as e:
+        logger.error(f"Banner error: {e}")
         await update.message.reply_html(welcome_text, reply_markup=main_menu())
 
 async def cmd_myplan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -105,7 +102,6 @@ async def cb_menu_back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     q = update.callback_query
     await q.answer()
     states.clear_all(q.from_user.id)
-    # Send main menu again with banner
     await _send_new_banner(q, _build_welcome(q.from_user.id, q.from_user.full_name), "SYSTEM OVERRIDE", main_menu())
 
 async def cb_menu_premium(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
