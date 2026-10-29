@@ -91,13 +91,11 @@ def generate_banner(avatar_bytes: bytes | None, title: str = "SYSTEM OVERRIDE") 
     buf.seek(0)
     return buf
 
-# NAYA STATIC BANNER (Bina DP ke, bada text)
 def generate_static_banner(title: str = "SCRAPER ENGINE") -> io.BytesIO:
     W, H = 1024, 500
     theme = SECTION_THEMES.get(title.upper(), DEFAULT_THEME)
     img, draw, NEON, SUB = _draw_base_theme(W, H, theme)
     
-    # Bada center text
     title_text = sc(title.upper())
     draw.text((W//2, H//2 - 30), title_text, font=_font(80), fill=NEON, anchor="mm")
     draw.text((W//2, H//2 + 40), sc("NOX SYNDICATE"), font=_font(30), fill=SUB, anchor="mm")
