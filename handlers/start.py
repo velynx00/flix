@@ -10,7 +10,7 @@ from telegram.ext import Application, CallbackQueryHandler, CommandHandler, Cont
 
 import config
 import database.db as db
-from keyboards.menus import main_menu, premium_menu, scrape_menu, add_menu, session_menu, status_menu
+from keyboards.menus import main_menu, premium_menu, scrape_menu, add_menu, session_menu, status_menu, back_btn
 from utils.banner import generate_banner
 from utils.text import sc, escape_html
 from handlers import states
@@ -18,7 +18,6 @@ from handlers import states
 logger = logging.getLogger(__name__)
 
 def _build_welcome(user_id: int, user_name: str) -> str:
-    # SHORTER TEXT, FULL BOLD, THICKER LINES (━━━)
     return (
         f"<blockquote>🕷️ <b>{sc('ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ᴠᴇʟʏɴ ɴᴏx')}</b></blockquote>\n"
         f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
@@ -221,6 +220,31 @@ async def cb_menu_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=add_menu())
 
 
+# FIX: Added handler for scrape:start button
+async def cb_scrape_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+    await query.answer()
+    context.user_data['action'] = 'scrape'
+    context.user_data['waiting_for'] = 'target'
+    text = (
+        f"<b>{sc('ᴇxᴛʀᴀᴄᴛɪᴏɴ ᴘʀᴏᴛᴏᴄᴏʟ')}</b>\n\n"
+        f"<b>{sc('ᴘʟᴇᴀꜱᴇ ꜱᴇɴᴅ ᴛʜᴇ ᴛᴀʀɢᴇᴛ ɢʀᴏᴜᴘ ʟɪɴᴋ ᴏʀ ᴜꜱᴇʀɴᴀᴍᴇ ʙᴇʟᴏᴡ.')}</b>"
+    )
+    await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=back_btn())
+
+# FIX: Added handler for add:start button
+async def cb_add_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+    await query.answer()
+    context.user_data['action'] = 'add'
+    context.user_data['waiting_for'] = 'target'
+    text = (
+        f"<b>{sc('ɪɴᴊᴇᴄᴛɪᴏɴ ᴘʀᴏᴛᴏᴄᴏʟ')}</b>\n\n"
+        f"<b>{sc('ᴘʟᴇᴀꜱᴇ ꜱᴇɴᴅ ᴛʜᴇ ᴛᴀʀɢᴇᴛ ɢʀᴏᴜᴘ ʟɪɴᴋ ᴏʀ ᴜꜱᴇʀɴᴀᴍᴇ ʙᴇʟᴏᴡ.')}</b>"
+    )
+    await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=back_btn())
+
+
 async def cb_menu_premium(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query   = update.callback_query
     user_id = query.from_user.id
@@ -294,6 +318,8 @@ def register(app: Application) -> None:
     app.add_handler(CallbackQueryHandler(cb_menu_back,       pattern="^menu:back$"))
     app.add_handler(CallbackQueryHandler(cb_menu_scrape,     pattern="^menu:scrape$"))
     app.add_handler(CallbackQueryHandler(cb_menu_add,        pattern="^menu:add$"))
+    app.add_handler(CallbackQueryHandler(cb_scrape_start,    pattern="^scrape:start$")) # <-- FIXED
+    app.add_handler(CallbackQueryHandler(cb_add_start,       pattern="^add:start$"))    # <-- FIXED
     app.add_handler(CallbackQueryHandler(cb_menu_premium,    pattern="^menu:premium$"))
     app.add_handler(CallbackQueryHandler(cb_premium_myplan,  pattern="^premium:myplan$"))
     app.add_handler(CallbackQueryHandler(cb_status_refresh,  pattern="^status:refresh$"))
