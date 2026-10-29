@@ -8,55 +8,57 @@ def _kb(rows: list[list[InlineKeyboardButton]]) -> InlineKeyboardMarkup:
 def main_menu() -> InlineKeyboardMarkup:
     return _kb([
         [
-            InlineKeyboardButton(f"⚡ {sc('ꜱᴄʀᴀᴘᴇ')}", callback_data="menu:scrape", style="primary"),
-            InlineKeyboardButton(f"🔥 {sc('ᴀᴅᴅ')}", callback_data="menu:add", style="success"),
+            InlineKeyboardButton(f"⚡ {sc('scrape')}", callback_data="menu:scrape"),
+            InlineKeyboardButton(f"🔥 {sc('add')}",   callback_data="menu:add"),
         ],
         [
-            InlineKeyboardButton(f"💎 {sc('ᴘʀᴇᴍɪᴜᴍ')}", callback_data="menu:premium", style="primary"),
-            InlineKeyboardButton(f"❓ {sc('ʜᴇʟᴘ')}", callback_data="menu:help", style="danger"),
+            InlineKeyboardButton(f"💎 {sc('premium')}", callback_data="menu:premium"),
+            InlineKeyboardButton(f"❓ {sc('help')}",   callback_data="menu:help"),
         ],
         [
-            InlineKeyboardButton(f"📢 {sc('ᴜᴘᴅᴀᴛᴇꜱ')}", url=config.UPDATE_CHANNEL_URL, style="primary"),
+            InlineKeyboardButton(f"📢 {sc('updates')}", url=config.UPDATE_CHANNEL_URL),
         ],
     ])
 
 def help_menu() -> InlineKeyboardMarkup:
     return _kb([
-        [InlineKeyboardButton(f"🔑 {sc('ɢᴇᴛ ᴀᴘɪ ɢᴜɪᴅᴇ')}", callback_data="help:api", style="primary")],
-        [InlineKeyboardButton(f"📥 {sc('ꜱᴄʀᴀᴘᴇ ɢᴜɪᴅᴇ')}", callback_data="help:scrape", style="success")],
-        [InlineKeyboardButton(f"📤 {sc('ᴀᴅᴅ ɢᴜɪᴅᴇ')}", callback_data="help:add", style="success")],
-        [InlineKeyboardButton(f"↩ {sc('ʙᴀᴄᴋ')}", callback_data="menu:back", style="danger")],
+        [InlineKeyboardButton(f"🔑 {sc('get api guide')}",   callback_data="help:api")],
+        [InlineKeyboardButton(f"📥 {sc('scrape guide')}",    callback_data="help:scrape")],
+        [InlineKeyboardButton(f"📤 {sc('add guide')}",       callback_data="help:add")],
+        [InlineKeyboardButton(f"↩ {sc('back')}",             callback_data="menu:back")],
     ])
 
 def scrape_menu() -> InlineKeyboardMarkup:
     return _kb([
-        [InlineKeyboardButton(f"⟢ {sc('ꜱᴛᴀʀᴛ ꜱᴄʀᴀᴘᴇ')}", callback_data="scrape:start", style="success")],
-        [InlineKeyboardButton(f"↩ {sc('ʙᴀᴄᴋ')}", callback_data="menu:back", style="danger")],
+        [InlineKeyboardButton(f"⟢ {sc('start scrape')}", callback_data="scrape:start")],
+        [InlineKeyboardButton(f"↩ {sc('back')}",          callback_data="menu:back")],
     ])
 
 def add_menu() -> InlineKeyboardMarkup:
     return _kb([
-        [InlineKeyboardButton(f"✦ {sc('ꜱᴛᴀʀᴛ ᴀᴅᴅɪɴɢ')}", callback_data="add:start", style="success")],
-        [InlineKeyboardButton(f"↩ {sc('ʙᴀᴄᴋ')}", callback_data="menu:back", style="danger")],
+        [InlineKeyboardButton(f"✦ {sc('start adding')}", callback_data="add:start")],
+        [InlineKeyboardButton(f"↩ {sc('back')}",          callback_data="menu:back")],
     ])
 
-def premium_menu(is_owner: bool = False) -> InlineKeyboardMarkup:
-    rows = [
-        [InlineKeyboardButton(f"💬 {sc('ᴄᴏɴᴛᴀᴄᴛ ᴏᴡɴᴇʀ')} (@Velynx007)", url="https://t.me/Velynx007", style="primary")],
-        [InlineKeyboardButton(f"↩ {sc('ʙᴀᴄᴋ')}", callback_data="menu:back", style="danger")],
-    ]
-    return _kb(rows)
+def premium_menu() -> InlineKeyboardMarkup:
+    return _kb([
+        [InlineKeyboardButton(
+            f"💬 {sc('contact owner')} (@Velynx007)",
+            url="https://t.me/Velynx007"
+        )],
+        [InlineKeyboardButton(f"↩ {sc('back')}", callback_data="menu:back")],
+    ])
 
 def admin_panel() -> InlineKeyboardMarkup:
     return _kb([
-        [InlineKeyboardButton(f"📊 {sc('ꜱᴛᴀᴛꜱ')}", callback_data="admin:stats", style="primary")],
+        [InlineKeyboardButton(f"📊 {sc('stats')}",          callback_data="admin:stats")],
         [
-            InlineKeyboardButton(f"🔑 {sc('ᴀᴅᴅ ꜱᴇꜱꜱɪᴏɴ')}", callback_data="admin:addapi", style="success"),
-            InlineKeyboardButton(f"🗑 {sc('ʀᴇᴠᴏᴋᴇ')}", callback_data="admin:revoke", style="danger"),
+            InlineKeyboardButton(f"🔑 {sc('add session')}",  callback_data="admin:addapi"),
+            InlineKeyboardButton(f"🗑 {sc('revoke')}",       callback_data="admin:revoke"),
         ],
-        [InlineKeyboardButton(f"😈 {sc('ɢᴇɴᴇʀᴀᴛᴇ ᴅᴀʀᴋ ᴅᴘ')}", callback_data="admin:dp", style="danger")], # NAYA BUTTON
-        [InlineKeyboardButton(f"↩ {sc('ʙᴀᴄᴋ')}", callback_data="menu:back", style="danger")],
+        [InlineKeyboardButton(f"😈 {sc('generate dark dp')}", callback_data="admin:dp")],
+        [InlineKeyboardButton(f"↩ {sc('back')}",              callback_data="menu:back")],
     ])
 
 def back_btn() -> InlineKeyboardMarkup:
-    return _kb([[InlineKeyboardButton(f"↩ {sc('ʙᴀᴄᴋ')}", callback_data="menu:back", style="danger")]])
+    return _kb([[InlineKeyboardButton(f"↩ {sc('back')}", callback_data="menu:back")]])
