@@ -23,17 +23,6 @@ class DB:
         if r and r['is_premium'] == 1:
             if r['expiry'] == 0 or r['expiry'] > int(time.time()): return True
         return False
-        
-    def get_plan_info(self, uid):
-        r = self.conn.execute("SELECT is_premium, expiry FROM users WHERE user_id=?", (uid,)).fetchone()
-        if not r or r['is_premium'] == 0: return "Free Plan", "Unlimited (Restricted Limits)"
-        if r['expiry'] == 0: return "Premium Plan", "Lifetime"
-        return "Premium Plan", time.strftime('%Y-%m-%d', time.localtime(r['expiry']))
-
-    def set_premium(self, uid, days):
-        expiry = int(time.time()) + (days * 86400) if days > 0 else 0
-        self.conn.execute("UPDATE users SET is_premium=1, expiry=? WHERE user_id=?", (expiry, uid))
-        self.conn.commit()
 
     def get_apis(self): 
         return self.conn.execute("SELECT * FROM apis WHERE status='active'").fetchall()
@@ -45,4 +34,5 @@ class DB:
     def has_session(self, user_id):
         return len(self.get_apis()) > 0
 
+# Ye line sabse important hai
 db = DB()
