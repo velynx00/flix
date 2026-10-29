@@ -1,5 +1,4 @@
 import io, os
-import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 import aiohttp
 from utils.text import sc
