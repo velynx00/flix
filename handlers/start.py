@@ -12,6 +12,30 @@ from handlers import states
 
 logger = logging.getLogger(__name__)
 
+async def _send_new_banner(q, text, title, reply_markup):
+    try: await q.message.delete()
+    except: pass
+    
+    dp_bytes = None
+    try:
+        photos = await q.get_bot().get_user_profile_photos(q.from_user.id, limit=1)
+        if photos.total_count:
+            f = await q.get_bot().get_file(photos.photos[0][-1].file_id)
+            buf = io.BytesIO()
+            await f.download_to_memory(buf)
+            dp_bytes = buf.getvalue()
+    except: pass
+    
+    banner = await generate_banner(dp_bytes, title=title)
+    await q.get_bot().send_photo(
+        chat_id=q.message.chat_id,
+        photo=InputFile(banner, filename="menu_banner.png"),
+        caption=text,
+        parse_mode=ParseMode.HTML,
+        reply_markup=reply_markup,
+        has_spoiler=True
+    )
+
 async def safe_edit(query, text, reply_markup=None):
     try:
         if query.message.photo:
@@ -54,7 +78,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     states.clear_all(user.id)
 
     dp_bytes = await _fetch_user_dp(context, user.id)
-    try: banner_path = generate_banner(dp_bytes)
+    try: banner_path = generate_banner(dp_bytes, title="SYSTEM OVERRIDE")
     except: banner_path = None
 
     welcome_text = _build_welcome(user.id, user.full_name)
@@ -81,22 +105,30 @@ async def cb_menu_back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     q = update.callback_query
     await q.answer()
     states.clear_all(q.from_user.id)
-    await safe_edit(q, _build_welcome(q.from_user.id, q.from_user.full_name), main_menu())
+    # Send main menu again with banner
+    await _send_new_banner(q, _build_welcome(q.from_user.id, q.from_user.full_name), "SYSTEM OVERRIDE", main_menu())
 
 async def cb_menu_premium(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     q = update.callback_query
     await q.answer()
     is_owner = (q.from_user.id == config.OWNER_ID)
-    text = f"<b>★ {sc('ᴠᴇʟʏɴ ɴᴏx ᴘʀᴇᴍɪᴜᴍ')} ★</b>\n\n{sc('ᴜɴʟᴏᴄᴋ ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴄᴄᴇꜱꜱ.')}"
-    await safe_edit(q, text, premium_menu(is_owner))
-
-async def cb_premium_upgrade(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    q = update.callback_query
-    await q.answer("Contact Owner to buy premium!", show_alert=True)
+    
+    text = (
+        f"<b>💎 {sc('ᴠᴇʟʏɴ ɴᴏx ᴘʀᴇᴍɪᴜᴍ')} 💎</b>\n"
+        f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
+        f"🔥 <b>{sc('ᴜɴʟᴏᴄᴋ ᴛʜᴇ ᴜʟᴛɪᴍᴀᴛᴇ ᴘᴏᴡᴇʀ')}</b>\n\n"
+        f"<b>{sc('ᴘʀᴇᴍɪᴜᴍ ʙᴇɴᴇꜰɪᴛꜱ')}:</b>\n"
+        f"▸ {sc('ᴜɴʟɪᴍɪᴛᴇᴅ ꜱᴄʀᴀᴘɪɴɢ')}\n"
+        f"▸ {sc('ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴅᴅɪɴɢ')}\n"
+        f"▸ {sc('ɴᴏ ᴅᴀɪʟʏ ʟɪᴍɪᴛꜱ')}\n"
+        f"▸ {sc('ᴘʀɪᴏʀɪᴛʏ ꜱᴜᴘᴘᴏʀᴛ')}\n\n"
+        f"<b>━━━━━━━━━━━━━━━━━━━━━</b>\n"
+        f"🛒 <b>{sc('ᴛᴏ ᴘᴜʀᴄʜᴀꜱᴇ, ᴄᴏɴᴛᴀᴄᴛ')}:</b> <a href='https://t.me/Velynx007'><b>@Velynx007</b></a>"
+    )
+    await _send_new_banner(q, text, "PREMIUM ACCESS", premium_menu(is_owner))
 
 def register(app: Application) -> None:
     app.add_handler(CommandHandler("start", cmd_start))
     app.add_handler(CommandHandler("myplan", cmd_myplan))
     app.add_handler(CallbackQueryHandler(cb_menu_back, pattern="^menu:back$"))
     app.add_handler(CallbackQueryHandler(cb_menu_premium, pattern="^menu:premium$"))
-    app.add_handler(CallbackQueryHandler(cb_premium_upgrade, pattern="^premium:upgrade$"))
