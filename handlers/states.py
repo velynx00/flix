@@ -2,7 +2,7 @@ import logging, asyncio
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import Application, MessageHandler, filters, ContextTypes
-from telethon import TelegramClient
+from telethon import TelegramClient, errors
 from telethon.sessions import StringSession
 from database.db import db
 from core.engine import do_scrape
@@ -32,9 +32,11 @@ async def handle_states(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         client = TelegramClient(StringSession(), int(context.user_data['api_id']), context.user_data['api_hash'])
         await client.connect()
         try:
-            await client.send_code_request(text)
+            # Fix double + if present
+            clean_phone = text.replace("++", "+")
+            await client.send_code_request(clean_phone)
             context.user_data['client'] = client
-            context.user_data['phone'] = text
+            context.user_data['phone'] = clean_phone
             context.user_data['waiting_for'] = 'api_otp'
             await update.message.reply_text(f"<b>{sc('ᴇɴᴛᴇʀ ᴛʜᴇ ᴏᴛᴘ ᴄᴏᴅᴇ')}:</b>", parse_mode=ParseMode.HTML)
         except Exception as e:
@@ -49,13 +51,13 @@ async def handle_states(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             context.user_data['waiting_for'] = None
             await update.message.reply_text("✅ <b>API Added Successfully!</b>", parse_mode=ParseMode.HTML)
             await client.disconnect()
+        except errors.SessionPasswordNeededError:
+            # FIX: Properly catching Telethon 2FA error
+            context.user_data['waiting_for'] = 'api_2fa'
+            await update.message.reply_text("🔐 <b>2FA Password Required:</b>\n\nPlease enter your Two-Step Verification password:", parse_mode=ParseMode.HTML)
         except Exception as e:
-            if "SessionPasswordNeeded" in str(e):
-                context.user_data['waiting_for'] = 'api_2fa'
-                await update.message.reply_text("🔐 <b>2FA Password Required:</b>", parse_mode=ParseMode.HTML)
-            else:
-                context.user_data['waiting_for'] = None
-                await update.message.reply_text(f"❌ Error: {e}")
+            context.user_data['waiting_for'] = None
+            await update.message.reply_text(f"❌ Error: {e}")
                 
     elif waiting_for == 'api_2fa':
         client = context.user_data['client']
@@ -88,7 +90,7 @@ async def handle_states(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         else:
             context.user_data['waiting_for'] = None
             apis = db.get_apis()
-            if not apis: return await update.message.reply_text("❌ No API configured.")
+            if not apis: return await update.message.reply_text("❌ No API configured. Use Setup API.")
             await update.message.reply_text(f"⏳ <b>{sc('ꜱᴄʀᴀᴘɪɴɢ ꜱᴛᴀʀᴛᴇᴅ...')}</b>", parse_mode=ParseMode.HTML)
             asyncio.create_task(do_scrape(update.get_bot(), update.message.chat_id, apis[0], context.user_data['target'], limit))
             
