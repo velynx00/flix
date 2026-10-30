@@ -6,7 +6,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 import config
 from database.db import db
-from handlers import start, admin, scraper, states, help, router
+from handlers import start, admin, scraper, states, help, router, osint
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -38,6 +38,7 @@ def main():
     admin.register(application)
     help.register(application)
     router.register(application)
+    osint.register(application)
     states.register(application)
 
     application.add_error_handler(error_handler)
